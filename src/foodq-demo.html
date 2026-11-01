@@ -71,6 +71,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .c-head .shop{font-weight:800;font-size:18px}
 .c-head .sub{font-size:13px;opacity:.9}
 .c-body{padding:14px 14px 0;display:grid;gap:12px}
+body.client-only .top{display:none}
+body.client-only #main{padding-top:16px}
 .lookup{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
 .lookup input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font:inherit;font-size:14px;background:var(--surface);color:var(--ink)}
 .lookup button{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:7px 12px;font-weight:600;font-size:13.5px}
@@ -792,6 +794,7 @@ const main=document.getElementById("main");
 function route(){
   const r=(location.hash||"").replace("#","");
   App.views.clear();
+  document.body.classList.toggle("client-only",r==="client");
   document.querySelectorAll(".nav a").forEach(a=>{if(a.dataset.r===r)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
   const note=App.notice?'<div class="notice">'+esc(App.notice)+'</div>':"";
   if(r==="client"){main.innerHTML=note+'<div class="solo-client"><div class="phone" id="cv"></div></div>';App.views.add(ClientView(document.getElementById("cv")))}
