@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FoodQ – Đặt món trước, không cần xếp hàng</title>
+<meta name="description" content="FoodQ: đặt món trước, thanh toán VietQR, theo dõi số thứ tự và nhận món đúng lúc.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#F4F3F0}
+a{color:#1E1A17}a:hover{color:#000000}
+</style>
+<style>html{scroll-behavior:smooth}h1{font-size:clamp(40px,8vw,60px)!important}h2{font-size:clamp(28px,5vw,38px)!important}</style>
+</head>
+<body>
+<div style="font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #1E1A17; background: #FFFFFF; line-height: 1.55">
+
+<!-- NAV -->
+<header style="border-bottom: 1px solid #E4DFD8">
+<nav style="max-width: 1200px; margin: 0 auto; padding: 18px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<a href="#top" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1E1A17">
+<span style="width: 40px; height: 40px; border-radius: 12px; background: #EC6417; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px">Q</span>
+<span style="font-weight: 800; font-size: 22px; letter-spacing: -0.02em">FoodQ</span>
+</a>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; font-size: 15px; font-weight: 500">
+<a href="#cach-dung" style="text-decoration: none">Cách dùng</a>
+<a href="#phu-hop" style="text-decoration: none">Phù hợp với</a>
+<a href="#dat-truoc" style="text-decoration: none">Đặt trước</a>
+<a href="#can-tin" style="text-decoration: none">Cho quán</a>
+<a href="../" style="text-decoration: none; background: #C24E0D; color: #FFFFFF; padding: 12px 20px; border-radius: 999px; font-weight: 600; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center">Đặt món ngay</a>
+</div>
+</nav>
+</header>
+
+<!-- HERO -->
+<section id="top" style="max-width: 1200px; margin: 0 auto; padding: 72px 24px 88px; display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+<div style="flex: 1 1 480px; min-width: 0">
+<p style="margin: 0 0 18px; display: inline-block; background: #FCE6D7; color: #A8430B; font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 999px">Bữa ăn giờ cao điểm, gọn trong một chạm</p>
+<h1 style="margin: 0 0 20px; font-size: 60px; line-height: 1.08; letter-spacing: -0.03em; font-weight: 800">Món nóng chờ bạn,<br>không phải bạn chờ món.</h1>
+<p style="margin: 0 0 32px; font-size: 19px; color: #6E655D; max-width: 520px">Gọi món từ bàn học, bàn làm việc hay ngay trên đường tới, trả tiền bằng VietQR, rồi nhìn số thứ tự của mình nhích lên từng chút. Đến lúc điện thoại báo món đã xong, bạn chỉ việc thong thả ghé quầy, nhận phần ăn còn nóng hổi và tận hưởng trọn vẹn giờ nghỉ của mình.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px">
+<a href="../" style="text-decoration: none; background: #C24E0D; color: #FFFFFF; padding: 16px 28px; border-radius: 999px; font-weight: 700; font-size: 17px; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center">Thử bản demo</a>
+<a href="#cach-dung" style="text-decoration: none; border: 2px solid #1E1A17; color: #1E1A17; padding: 14px 26px; border-radius: 999px; font-weight: 700; font-size: 17px; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center">Xem cách dùng</a>
+</div>
+<p style="margin: 22px 0 0; font-size: 14px; color: #6E655D">Không cần cài đặt. Quét mã QR của quán, dù được gửi qua nhóm chat hay dán ngay trên bàn, chạm một lần là mở.</p>
+</div>
+
+<!-- phone mockup -->
+<div style="flex: 1 1 340px; display: flex; justify-content: center; min-width: 0">
+<div style="width: 300px; max-width: 100%; border-radius: 40px; background: #1E1A17; padding: 12px; box-shadow: 0 30px 60px rgba(18,55,42,0.22)">
+<div style="border-radius: 30px; background: #F4F3F0; padding: 22px 18px 24px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-weight: 800; font-size: 17px">FoodQ</span>
+<span style="font-size: 12px; color: #6E655D">Quán gần bạn</span>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #E4DFD8">
+<p style="margin: 0; font-size: 13px; color: #6E655D">Số của bạn</p>
+<p style="margin: 2px 0 6px; font-size: 56px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1">112</p>
+<p style="margin: 0; font-size: 14px; font-weight: 600">Còn 3 đơn trước bạn</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 16px; padding: 14px 16px; border: 1px solid #E4DFD8; display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 13px; color: #6E655D">Dự kiến xong</span>
+<span style="font-size: 18px; font-weight: 800">11:24</span>
+</div>
+<div style="display: flex; gap: 6px">
+<span style="flex: 1; height: 6px; border-radius: 3px; background: #EC6417"></span>
+<span style="flex: 1; height: 6px; border-radius: 3px; background: #EC6417"></span>
+<span style="flex: 1; height: 6px; border-radius: 3px; background: #E4DFD8"></span>
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 11px; color: #6E655D">
+<span>Đã thanh toán</span><span>Đang nấu</span><span>Xong</span>
+</div>
+<div style="background: #FFFFFF; border-radius: 16px; padding: 12px 16px; border: 1px solid #E4DFD8; font-size: 13px">
+<div style="display: flex; justify-content: space-between"><span>1 × Cơm gà xối mỡ</span><span style="font-weight: 600">35.000đ</span></div>
+<div style="display: flex; justify-content: space-between; margin-top: 4px"><span>1 × Trà đá</span><span style="font-weight: 600">5.000đ</span></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PROBLEM -->
+<section style="background: #F4F3F0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 80px 24px">
+<h2 style="margin: 0 0 12px; font-size: 38px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800; max-width: 720px">Giờ nghỉ trưa vốn đã ngắn, đừng để nó trôi qua trong hàng người</h2>
+<p style="margin: 0 0 40px; font-size: 18px; color: #6E655D; max-width: 680px">Cứ đến 11 giờ, cả trường học, cả tòa văn phòng như cùng lúc đổ về căn tin và hàng quán quanh đó. Tiếng gọi món chen nhau, hàng người dài thêm từng phút, và nhiều hôm đến lượt mình thì món yêu thích đã hết từ lâu.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+<h3 style="margin: 14px 0 8px; font-size: 20px; font-weight: 700">Chờ trong mù mờ</h3>
+<p style="margin: 0; color: #6E655D">Không biết phía trước còn bao nhiêu người, cũng chẳng chắc mình có kịp ăn xong trước tiết học hay ca làm buổi chiều.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+<h3 style="margin: 14px 0 8px; font-size: 20px; font-weight: 700">Quầy rối, bếp vội</h3>
+<p style="margin: 0; color: #6E655D">Một người vừa ghi món, vừa thu tiền, vừa lục tiền lẻ để thối. Bận đến thế thì nhầm món là chuyện khó tránh.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"></path><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
+<h3 style="margin: 14px 0 8px; font-size: 20px; font-weight: 700">Đến nơi thì món đã hết</h3>
+<p style="margin: 0; color: #6E655D">Món ngon luôn hết sớm nhất, mà chẳng ai báo trước để bạn kịp chọn món khác.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="cach-dung" style="max-width: 1200px; margin: 0 auto; padding: 88px 24px">
+<h2 style="margin: 0 0 12px; font-size: 38px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800">Ba bước nhẹ nhàng cho một bữa trưa trọn vẹn</h2>
+<p style="margin: 0 0 44px; font-size: 18px; color: #6E655D; max-width: 640px">FoodQ chạy ngay trên trình duyệt điện thoại. Dù bạn đang ở trong lớp, ở văn phòng hay trên đường đi, bữa ăn cũng chỉ cách bạn vài chạm.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #FCE6D7; color: #A8430B; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center">1</span>
+<h3 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Quét mã, chọn món</h3>
+<p style="margin: 0; color: #6E655D">Mã QR của quán có thể nằm trong nhóm chat, trên bàn ăn hay ngay cửa ra vào. Thực đơn hôm nay hiện ra trước mắt, món nào đã hết bếp cũng ẩn đi từ trước.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #FCE6D7; color: #A8430B; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center">2</span>
+<h3 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Thanh toán bằng VietQR</h3>
+<p style="margin: 0; color: #6E655D">Dùng ngay app ngân hàng quen thuộc của bạn. Không tiền mặt, không chờ thối tiền lẻ.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="width: 52px; height: 52px; border-radius: 16px; background: #FCE6D7; color: #A8430B; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center">3</span>
+<h3 style="margin: 6px 0 0; font-size: 22px; font-weight: 700">Nhận món đúng lúc</h3>
+<p style="margin: 0; color: #6E655D">Số thứ tự, số đơn phía trước và giờ món xong đều hiện rõ. Món vừa ra khỏi bếp, điện thoại báo ngay cho bạn.</p>
+</div>
+</div>
+</section>
+
+<!-- USE CASES -->
+<section id="phu-hop" style="background: #F4F3F0">
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px">
+<h2 style="margin: 0 0 12px; font-size: 38px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800; max-width: 760px">Ở đâu có giờ cao điểm, ở đó FoodQ giúp được</h2>
+<p style="margin: 0 0 40px; font-size: 18px; color: #6E655D; max-width: 680px">FoodQ bắt đầu từ căn tin trường, nhưng bất cứ nơi nào khách đến dồn dập vào một khung giờ đều có thể dùng cùng một cách.</p>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px">
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c3 2 9 2 12 0v-5"></path></svg>
+<h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 700">Căn tin trường học</h3>
+<p style="margin: 0; color: #6E655D">Giờ nghỉ ngắn, học sinh và sinh viên đổ về cùng lúc. Đặt trước giúp ai cũng kịp ăn và kịp vào lớp.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"></rect><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"></path></svg>
+<h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 700">Bếp ăn văn phòng, khu công nghiệp</h3>
+<p style="margin: 0; color: #6E655D">Cả trăm người nghỉ trưa chung một giờ. Bếp biết trước mình cần nấu bao nhiêu, người lao động bớt phút đứng chờ.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18"></path><path d="M5 11a7 7 0 0 1 14 0"></path><path d="M4 15h16"></path><path d="M12 4V3"></path></svg>
+<h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 700">Quán ăn, khu ẩm thực</h3>
+<p style="margin: 0; color: #6E655D">Khách gọi món ngay trên đường tới, đến nơi là có phần. Quầy gọn hơn, bàn quay vòng nhanh hơn.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 28px; border: 1px solid #E4DFD8; display: flex; flex-direction: column; gap: 10px">
+<svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EC6417" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a3 3 0 0 1 0 6h-1"></path><path d="M3 8h14v7a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5z"></path><path d="M7 2v3M11 2v3"></path></svg>
+<h3 style="margin: 4px 0 0; font-size: 20px; font-weight: 700">Quán cà phê, trà sữa</h3>
+<p style="margin: 0; color: #6E655D">Đơn mang đi được gọi từ trước, quầy pha chế làm theo thứ tự. Không còn cảnh chen nhau đứng đợi gọi tên.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- PRE-ORDER -->
+<section id="dat-truoc" style="background: #1E1A17; color: #FFFFFF">
+<div style="max-width: 1200px; margin: 0 auto; padding: 88px 24px; display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start">
+<div style="flex: 1 1 420px; min-width: 0">
+<p style="margin: 0 0 14px; font-weight: 600; font-size: 15px; color: #FF8641">Đặt trước khung giờ</p>
+<h2 style="margin: 0 0 16px; font-size: 38px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800; color: #FFFFFF">Hẹn trước một khung giờ, đến nơi là được ưu tiên</h2>
+<p style="margin: 0; font-size: 18px; color: #D9D0C7">Đã biết trước giờ mình rảnh? Hãy giữ cho mình một khung 15 phút giữa giờ cao điểm. Khi bạn đến quầy check-in và thanh toán, đơn của bạn sẽ được đưa lên đầu hàng đợi với mã số mang chữ P phía trước, như P115.</p>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="background: #2A2420; border-radius: 18px; padding: 22px">
+<p style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF">11:00 – 12:00</p>
+<p style="margin: 6px 0 0; color: #D9D0C7; font-size: 15px">Ví dụ 4 khung 11:00, 11:15, 11:30, 11:45. Mỗi quán tự chọn giờ cao điểm của mình</p>
+</div>
+<div style="background: #2A2420; border-radius: 18px; padding: 22px">
+<p style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF">10 đơn</p>
+<p style="margin: 6px 0 0; color: #D9D0C7; font-size: 15px">tối đa cho mỗi khung giờ</p>
+</div>
+<div style="background: #2A2420; border-radius: 18px; padding: 22px">
+<p style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF">Trước 1 tiếng</p>
+<p style="margin: 6px 0 0; color: #D9D0C7; font-size: 15px">đặt chậm nhất 1 tiếng trước khung giờ, chưa cần trả tiền</p>
+</div>
+<div style="background: #2A2420; border-radius: 18px; padding: 22px">
+<p style="margin: 0; font-size: 28px; font-weight: 800; color: #FFFFFF">−5 / +15 phút</p>
+<p style="margin: 6px 0 0; color: #D9D0C7; font-size: 15px">check-in sớm nhất 5 phút trước, trễ không quá 15 phút</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FOR CANTEEN -->
+<section id="can-tin" style="max-width: 1200px; margin: 0 auto; padding: 88px 24px; display: flex; flex-wrap: wrap; gap: 56px; align-items: center">
+<div style="flex: 1 1 460px; min-width: 0">
+<p style="margin: 0 0 14px; font-weight: 600; font-size: 15px; color: #6E655D">Dành cho căn tin và quán ăn</p>
+<h2 style="margin: 0 0 16px; font-size: 38px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800">Bếp nấu thong thả hơn, quầy bớt cảnh chen lấn</h2>
+<p style="margin: 0 0 28px; font-size: 18px; color: #6E655D">Mỗi đơn đã thanh toán hiện lên màn hình bếp theo đúng thứ tự. Bếp chỉ cần bấm "Xong", khách lập tức nhận được thông báo. Quán dùng luôn điện thoại hoặc máy tính đang có, không phải sắm thêm thiết bị nào.</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px">
+<li style="display: flex; gap: 12px; align-items: flex-start"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C8E52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M20 6 9 17l-5-5"></path></svg><span>Tiền về qua VietQR, đối soát rõ ràng theo từng đơn</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C8E52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M20 6 9 17l-5-5"></path></svg><span>Món nào hết, chỉ một chạm là ẩn khỏi thực đơn</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C8E52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M20 6 9 17l-5-5"></path></svg><span>Nắm trước số đơn đặt sẵn trong giờ cao điểm để chủ động chuẩn bị</span></li>
+<li style="display: flex; gap: 12px; align-items: flex-start"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C8E52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 2px"><path d="M20 6 9 17l-5-5"></path></svg><span>Giờ dự kiến tự điều chỉnh theo số người nấu và tốc độ thực tế của bếp</span></li>
+</ul>
+</div>
+<div style="flex: 1 1 360px; min-width: 0; background: #F4F3F0; border-radius: 28px; padding: 40px; border: 1px solid #E4DFD8">
+<p style="margin: 0; font-size: 15px; color: #6E655D">Chi phí cho quán</p>
+<p style="margin: 8px 0 4px; font-size: 64px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05">5%</p>
+<p style="margin: 0 0 24px; font-size: 18px; font-weight: 600">trên mỗi đơn thành công</p>
+<p style="margin: 0 0 8px; color: #6E655D">Không phí cài đặt, không phí thiết bị. Ngày nào không có đơn, quán không mất đồng nào.</p>
+<p style="margin: 0; color: #6E655D">Hoàn toàn miễn phí trong 4 tuần thử nghiệm đầu tiên.</p>
+</div>
+</section>
+
+<!-- CTA -->
+<section style="padding: 0 24px 88px">
+<div style="max-width: 1152px; margin: 0 auto; background: #FCE6D7; border-radius: 32px; padding: 56px 40px; display: flex; flex-wrap: wrap; gap: 40px; align-items: center; justify-content: space-between">
+<div style="flex: 1 1 420px; min-width: 0">
+<h2 style="margin: 0 0 12px; font-size: 38px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800; color: #1E1A17">Trưa nay, để FoodQ lo phần chờ đợi</h2>
+<p style="margin: 0; font-size: 18px; color: #1E1A17">Quét mã bên cạnh để thử ngay trên điện thoại. Phần còn lại của giờ nghỉ là của bạn.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px"><img src="qr.png" alt="Mã QR mở app đặt món FoodQ" style="width: 160px; height: 160px; border-radius: 16px; background: #FFFFFF; padding: 10px; box-sizing: border-box; border: 1px solid #E4DFD8; display: block"><span style="font-size: 13px; color: #6E655D">Quét để đặt món</span></div>
+<a href="../" style="text-decoration: none; background: #C24E0D; color: #FFFFFF; padding: 16px 28px; border-radius: 999px; font-weight: 700; font-size: 17px; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center">Mở FoodQ</a>
+</div>
+</div>
+</section>
+
+<!-- FOOTER -->
+<footer style="border-top: 1px solid #E4DFD8">
+<div style="max-width: 1200px; margin: 0 auto; padding: 32px 24px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; font-size: 14px; color: #6E655D">
+<span><strong style="color: #1E1A17">FoodQ</strong> · Dự án môn Khởi nghiệp đổi mới sáng tạo</span>
+<span>Nhóm 7 thành viên · [Tên trường]</span>
+</div>
+</footer>
+
+</div>
+</body>
+</html>
