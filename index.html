@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FoodQ – Đặt món căn tin</title>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -232,12 +233,7 @@ body.client-only #main{padding-top:16px}
 </style>
 
 <header class="top">
-  <a class="brand" href="#"><i>Q</i>FoodQ</a>
-  <nav class="nav" aria-label="Chọn màn hình">
-    <a href="#client" data-r="client">App Sinh viên</a>
-    <a href="#kitchen" data-r="kitchen">App Bếp</a>
-    <a href="#both" data-r="both">Song song</a>
-  </nav>
+  <span class="brand"><i>Q</i>FoodQ</span>
   <div class="mode" id="mode"><b></b><span>Đang khởi động…</span></div>
 </header>
 <main id="main"></main>
@@ -520,7 +516,7 @@ function ClientView(root){
         h+='<div class="sec"><h3>Chọn khung giờ (mỗi khung '+RULE.cap+' chỗ)</h3>'+slotsHtml()+
           '<p class="rule">Đặt trước ít nhất '+RULE.leadMin+' phút. Chưa cần thanh toán. Đến quầy check-in và thanh toán trong khoảng '+RULE.beforeMin+' phút trước đến '+RULE.afterMin+' phút sau giờ đã chọn; trễ hơn thì chỗ bị hủy. Check-in và thanh toán xong, đơn của bạn được đưa lên đầu hàng chờ, trước các đơn lấy ngay.</p></div>';
       }
-      h+='<label class="field" for="cus-name">Tên hiển thị cho bếp<input id="cus-name" maxlength="24" placeholder="Ví dụ: Vân Anh" value="'+esc(s.name)+'"></label></div>';
+      h+='<label class="field" for="cus-name">Tên của bạn (để gọi khi nhận món)<input id="cus-name" maxlength="24" placeholder="Ví dụ: Vân Anh" value="'+esc(s.name)+'"></label></div>';
       h+=s.mode==="reserve"
         ?'<div class="bar"><button class="cta" data-a="reserve"'+(s.slot?"":" disabled")+'><span>'+(s.slot?"Giữ chỗ lúc "+s.slot:"Chọn khung giờ")+'</span><span>Chưa trả tiền</span></button></div>'
         :'<div class="bar"><button class="cta" data-a="pay"><span>Thanh toán bằng VietQR</span><span class="num">'+fmt(total())+'</span></button></div>';
@@ -605,7 +601,7 @@ function ClientView(root){
     const a=root.querySelector("[data-ahead]"),e=root.querySelector("[data-eta]"),av=root.querySelector("[data-avg]"),p=root.querySelector("[data-prog]");
     if(a)a.textContent=q.ahead;
     if(e)e.textContent=q.eta<15?"Sắp xong":mmss(q.eta);
-    if(av)av.textContent="bếp làm ~"+mmss(q.avg)+"/đơn";
+    if(av)av.textContent="trung bình ~"+mmss(q.avg)+" mỗi đơn";
     if(p){const elapsed=(t-(o.status==="cooking"?o.cookingAt:(o.paidAt||o.createdAt)))/1000;
       const pct=o.status==="cooking"?50+50*Math.min(1,elapsed/Math.max(q.avg,1)):Math.min(45,45*elapsed/(elapsed+Math.max(q.eta,1)));p.style.width=Math.min(98,pct)+"%"}
   }
@@ -680,167 +676,14 @@ function ClientView(root){
   return{onData,tick};
 }
 
-/* ---------- kitchen app ---------- */
-function KitchenView(root){
-  let armed=false,armT=null,sig="",genN="5",genType="now",busy=false;
-  const NAMES=["An","Bình","Chi","Dũng","Hà","Khoa","Linh","Minh","Nam","Phương","Quân","Thảo","Trang","Tuấn","Vy","Yến"];
-  const pick=a=>a[Math.floor(Math.random()*a.length)];
-  function randItems(){
-    const ok=MENU.filter(m=>!App.data.soldOut.includes(m.id));
-    const mains=ok.filter(m=>m.price>=30000),drinks=ok.filter(m=>m.price<30000);
-    const out=[];
-    if(mains.length){const m=pick(mains);out.push({id:m.id,name:m.name,price:m.price,qty:Math.random()<.2?2:1})}
-    if(drinks.length&&(Math.random()<.5||!out.length)){const m=pick(drinks);out.push({id:m.id,name:m.name,price:m.price,qty:1})}
-    return out;
-  }
-  async function generate(){
-    if(busy)return;
-    let count=Math.max(1,Math.min(20,parseInt(genN,10)||0));
-    if(!randItems().length){toast("Tất cả món đang báo hết");return}
-    if(genType!=="now"){const st=slotState(genType,App.data,now());
-      if(st.left<=0){toast("Khung "+genType+" đã đủ "+RULE.cap+" chỗ");return}
-      if(count>st.left){count=st.left;toast("Khung "+genType+" chỉ còn "+st.left+" chỗ, tạo "+st.left+" đơn")}}
-    busy=true;render();
-    let made=0;
-    try{
-      for(let i=0;i<count;i++){
-        const its=randItems(),tot=its.reduce((a,x)=>a+x.price*x.qty,0),t=now(),nm=pick(NAMES)+" (demo)";
-        const o=genType==="now"
-          ?{kind:"now",name:nm,items:its,total:tot,status:"paid",createdAt:t,paidAt:t,priorityAt:t,demo:true}
-          :{kind:"reserve",name:nm,items:its,total:tot,status:"reserved",slot:genType,slotAt:atToday(genType,t),createdAt:t,demo:true};
-        await act(()=>App.store.createOrder(o));made++;
-      }
-      toast("Đã tạo "+made+" đơn demo "+(genType==="now"?"lấy ngay":"đặt trước "+genType));
-    }catch(e){}
-    busy=false;render();
-  }
-  const phaseSig=t=>App.data.orders.filter(o=>o.status==="reserved").map(o=>o.id+phase(o,t)).join("|");
-  function itemsHtml(o){return '<ul>'+(o.items||[]).map(i=>'<li><em class="num">'+i.qty+'×</em><span>'+esc(i.name)+'</span></li>').join("")+'</ul>'}
-  function resTicket(o,t){
-    const ph=phase(o,t);
-    let line,btn;
-    if(ph==="early"){line='<span class="phase">Check-in từ '+hm(winOpen(o))+' · còn <span data-until="'+winOpen(o)+'">'+mmss((winOpen(o)-t)/1000)+'</span></span>';btn='<button class="act ghost" disabled>Chưa đến giờ check-in</button>'}
-    else if(ph==="open"){line='<span class="phase open">Đang mở check-in · đóng sau <span data-until="'+winClose(o)+'">'+mmss((winClose(o)-t)/1000)+'</span></span>';btn='<button class="act" data-a="checkin" data-id="'+esc(o.id)+'">Check-in · Thu '+fmt(o.total)+'</button>'}
-    else{line='<span class="phase gone">Quá giờ, khách chưa đến (đóng '+hm(winClose(o))+')</span>';btn='<button class="act ghost" data-a="noshow" data-id="'+esc(o.id)+'">Hủy chỗ</button>'}
-    return '<div class="tk '+(ph==="open"?"open":ph==="gone"?"gone":"")+'"><div class="tk-h"><b>'+o.slot+'</b><span class="who">'+esc(o.name||"Khách")+'<br>'+code(o)+'</span></div>'+itemsHtml(o)+
-      '<div class="tk-meta">'+line+'<span class="num">'+fmt(o.total)+'</span></div>'+btn+'</div>';
-  }
-  function ticket(o,t,avg){
-    const since=o.status==="cooking"?o.cookingAt:o.status==="ready"?o.readyAt:(o.paidAt||o.createdAt);
-    const late=o.status==="cooking"&&(t-o.cookingAt)/1000>avg*1.5;
-    const verb=o.status==="paid"?"Chờ":o.status==="cooking"?"Đang làm":"Chờ nhận";
-    const btn=o.status==="paid"?"Bắt đầu làm":o.status==="cooking"?"Xong · Gọi số "+qno(o):"Đã giao";
-    const next=o.status==="paid"?"cooking":o.status==="cooking"?"ready":"done";
-    const tag=o.kind==="reserve"?'<span class="tag-r">Ưu tiên · đặt trước '+o.slot+'</span>':'<span class="pill">Lấy ngay</span>';
-    return '<div class="tk'+(late?" late":"")+'"><div class="tk-h"><b class="num">'+qno(o)+'</b><span class="who">'+esc(o.name||"Khách")+'</span></div>'+itemsHtml(o)+
-      '<div class="tk-meta">'+tag+'<span class="num">'+verb+' <span data-since="'+since+'">'+mmss((t-since)/1000)+'</span></span></div>'+
-      '<button class="act" data-a="move" data-id="'+esc(o.id)+'" data-to="'+next+'">'+btn+'</button></div>';
-  }
-  function col(cls,title,body,count,extra){
-    return '<section class="col '+cls+'"><h3>'+title+'<span class="num">'+count+'</span></h3>'+(extra||"")+body+'</section>';
-  }
-  function render(){
-    const ae=document.activeElement,keepId=ae&&(ae.id==="k-clock"||ae.id==="k-gen-n")?ae.id:null,keepVal=keepId?ae.value:null;
-    const d=App.data,t=now(),avg=avgPrep(d.orders);sig=phaseSig(t);
-    const by=st=>d.orders.filter(o=>o.status===st);
-    const resv=by("reserved").sort((a,b)=>a.slotAt-b.slotAt||a.createdAt-b.createdAt);
-    const paid=by("paid").sort(byQueue),cooking=by("cooking").sort((a,b)=>a.cookingAt-b.cookingAt),ready=by("ready").sort((a,b)=>a.readyAt-b.readyAt),done=by("done");
-    const c=calling(d);
-    let h='<div class="stats">'+
-      '<div class="stat"><div class="k">Đặt trước chờ check-in</div><div class="v num">'+resv.filter(o=>phase(o,t)!=="gone").length+'</div></div>'+
-      '<div class="stat"><div class="k">Chờ làm</div><div class="v num">'+paid.length+'</div></div>'+
-      '<div class="stat"><div class="k">Đang làm</div><div class="v num">'+cooking.length+'</div></div>'+
-      '<div class="stat"><div class="k">Thời gian TB/đơn</div><div class="v num">'+mmss(avg)+'</div></div>'+
-      '<div class="stat call"><div class="k">Đang gọi số</div><div class="v num">'+(c?qno(c):"–")+'</div></div></div>';
-    h+='<div class="controls"><div class="grp clock"><span class="k">Giờ</span><b class="num" data-clock>'+hm(t)+'</b>'+(d.clockOffset?'<span class="demo">giờ demo</span>':"")+
-      '<label class="k" for="k-clock">Đặt giờ hệ thống</label><input type="time" id="k-clock" class="timein" value="'+hm(t)+'"><button class="toggle" data-a="clockset">Đặt giờ</button><button class="toggle" data-a="clockadd" data-d="5">+5 phút</button>'+(d.clockOffset?'<button class="toggle" data-a="clockreal">Giờ thật</button>':"")+'</div>'+
-      '<div class="grp"><span class="k">Người nấu</span><button class="stepbtn" data-a="cooks" data-d="-1" aria-label="Bớt người nấu">−</button><b class="num">'+(d.cooks||2)+'</b><button class="stepbtn" data-a="cooks" data-d="1" aria-label="Thêm người nấu">+</button></div>'+
-      '<div class="grp"><span class="k">Báo hết món</span>'+MENU.map(m=>'<button class="toggle" data-a="sold" data-id="'+m.id+'" aria-pressed="'+d.soldOut.includes(m.id)+'">'+m.name+'</button>').join("")+'</div>'+
-      '<button class="danger'+(armed?" arm":"")+'" data-a="reset">'+(armed?"Bấm lần nữa để xóa":"Xóa dữ liệu demo")+'</button></div>';
-    h+='<div class="controls"><div class="grp"><span class="k">Tạo đơn demo để test</span>'+
-      '<label class="k" for="k-gen-n">Số đơn</label><input type="number" id="k-gen-n" class="timein num" min="1" max="20" value="'+esc(genN)+'" style="width:64px">'+
-      '<label class="k" for="k-gen-type">Loại</label><select id="k-gen-type" class="timein">'+
-      '<option value="now"'+(genType==="now"?" selected":"")+'>Lấy ngay (đã thanh toán)</option>'+
-      RULE.slots.map(x=>{const st=slotState(x,d,t);return '<option value="'+x+'"'+(genType===x?" selected":"")+'>Đặt trước '+x+' (còn '+Math.max(0,st.left)+'/'+RULE.cap+')</option>'}).join("")+
-      '</select><button class="toggle" data-a="gen"'+(busy?" disabled":"")+'>'+(busy?"Đang tạo…":"Tạo đơn")+'</button></div></div>';
-    if(!d.ready)h+='<div class="notice">Đang tải đơn hàng…</div>';
-    const slotbar='<div class="slotbar">'+RULE.slots.map(x=>{const st=slotState(x,d,t);return '<span class="num">'+x+' · '+st.used+'/'+RULE.cap+'</span>'}).join("")+'</div>';
-    h+='<div class="cols">'+
-      col("reserve","Đặt trước (chưa check-in)",resv.length?resv.map(o=>resTicket(o,t)).join(""):'<div class="empty">Chưa có chỗ đặt trước cho 11:00–12:00.</div>',resv.length,slotbar)+
-      col("new","Hàng chờ làm",paid.length?paid.map(o=>ticket(o,t,avg)).join(""):'<div class="empty">Đơn đã thanh toán sẽ vào đây, xếp theo giờ ưu tiên.</div>',paid.length)+
-      col("cooking","Đang làm",cooking.length?cooking.map(o=>ticket(o,t,avg)).join(""):'<div class="empty">Bấm “Bắt đầu làm” ở hàng chờ.</div>',cooking.length)+
-      col("ready","Chờ sinh viên nhận",ready.length?ready.map(o=>ticket(o,t,avg)).join(""):'<div class="empty">Món xong sẽ hiện ở đây và báo cho sinh viên.</div>',ready.length)+'</div>';
-    h+='<div class="donecount num">Đã giao: '+done.length+' · Không đến: '+by("noshow").length+' · Tốc độ bếp tính từ 8 đơn gần nhất</div>';
-    root.innerHTML='<div class="k-wrap">'+h+'</div>';
-    if(keepId){const ci=root.querySelector("#"+keepId);if(ci){ci.value=keepVal;ci.focus()}}
-  }
-  function tick(){
-    const t=now();
-    if(phaseSig(t)!==sig){render();return}
-    root.querySelectorAll("[data-since]").forEach(el=>{el.textContent=mmss((t-Number(el.dataset.since))/1000)});
-    root.querySelectorAll("[data-until]").forEach(el=>{el.textContent=mmss((Number(el.dataset.until)-t)/1000)});
-    root.querySelectorAll("[data-clock]").forEach(el=>{el.textContent=hm(t)});
-  }
-  root.addEventListener("click",async ev=>{
-    const b=ev.target.closest("[data-a]");if(!b||b.disabled)return;const a=b.dataset.a;const t=now();
-    if(a==="move"){
-      const id=b.dataset.id,to=b.dataset.to,p={status:to};
-      if(to==="cooking")p.cookingAt=t;if(to==="ready")p.readyAt=t;if(to==="done")p.doneAt=t;
-      b.disabled=true;try{await act(()=>App.store.updateOrder(id,p))}catch(e){b.disabled=false}
-    }
-    else if(a==="checkin"){
-      const o=App.data.orders.find(x=>x.id===b.dataset.id);if(!o||phase(o,t)!=="open"){toast("Không còn trong giờ check-in");render();return}
-      b.disabled=true;try{const c=await act(()=>App.store.checkin(o.id,{status:"paid",checkinAt:t,paidAt:t,priorityAt:o.slotAt,paidAtCounter:true}));toast("Đã check-in "+code(o)+" · Số "+qno(c))}catch(e){b.disabled=false}
-    }
-    else if(a==="noshow"){b.disabled=true;try{await act(()=>App.store.updateOrder(b.dataset.id,{status:"noshow",noshowAt:t}))}catch(e){b.disabled=false}}
-    else if(a==="clockset"){setClock()}
-    else if(a==="gen"){generate()}
-    else if(a==="clockadd"){await act(()=>App.store.setConfig({clockOffset:now()-Date.now()+Number(b.dataset.d)*MIN}))}
-    else if(a==="clockreal"){await act(()=>App.store.setConfig({clockOffset:0}))}
-    else if(a==="cooks"){const n=Math.min(6,Math.max(1,(App.data.cooks||2)+Number(b.dataset.d)));if(n!==(App.data.cooks||2))await act(()=>App.store.setConfig({cooks:n}))}
-    else if(a==="sold"){const set=new Set(App.data.soldOut);set.has(b.dataset.id)?set.delete(b.dataset.id):set.add(b.dataset.id);await act(()=>App.store.setConfig({soldOut:[...set]}))}
-    else if(a==="reset"){
-      if(!armed){armed=true;render();clearTimeout(armT);armT=setTimeout(()=>{armed=false;render()},3500);return}
-      armed=false;clearTimeout(armT);b.disabled=true;b.textContent="Đang xóa…";
-      try{await act(()=>App.store.reset());toast("Đã xóa dữ liệu demo")}catch(e){}render();
-    }
-  });
-  async function setClock(){const ci=root.querySelector("#k-clock");const v=ci&&ci.value;if(!v){toast("Nhập giờ trước khi bấm Đặt giờ");return}if(ci)ci.blur();await act(()=>App.store.setConfig({clockOffset:atToday(v,Date.now())-Date.now()}));toast("Đã đặt giờ hệ thống: "+v)}
-  root.addEventListener("keydown",ev=>{if(ev.target.id==="k-clock"&&ev.key==="Enter"){ev.preventDefault();setClock()}if(ev.target.id==="k-gen-n"&&ev.key==="Enter"){ev.preventDefault();genN=ev.target.value;generate()}});
-  root.addEventListener("input",ev=>{if(ev.target.id==="k-gen-n")genN=ev.target.value});
-  root.addEventListener("change",ev=>{if(ev.target.id==="k-gen-type")genType=ev.target.value});
-  render();
-  return{onData:render,tick};
-}
-
-/* ---------- home ---------- */
-function homeHtml(){
-  return '<div class="home"><div><h1>Bản demo FoodQ</h1><p class="lead">Đặt món trước, thanh toán và theo dõi số thứ tự cho căn tin gần trường. Hai ứng dụng dùng chung một hàng chờ: sinh viên đặt món hoặc giữ chỗ giờ cao điểm, bếp nhận đơn và báo khi món xong.</p></div>'+
-  '<div class="picks">'+
-  '<a class="pick" href="#client"><span class="eyebrow">Điện thoại sinh viên</span><h2>App Sinh viên</h2><span>Lấy ngay hoặc giữ chỗ khung 11:00–12:00, check-in và thanh toán tại quầy, theo dõi số thứ tự và thời gian dự kiến.</span></a>'+
-  '<a class="pick" href="#kitchen"><span class="eyebrow">Máy tính bảng ở quầy và bếp</span><h2>App Bếp</h2><span>Hàng đặt trước riêng, check-in khách, hàng chờ làm xếp theo giờ ưu tiên, báo xong để gọi số.</span></a>'+
-  '<a class="pick" href="#both"><span class="eyebrow">Thuyết trình trên một màn hình</span><h2>Xem song song</h2><span>Hai app đặt cạnh nhau, thao tác bên này thấy ngay bên kia.</span></a></div>'+
-  '<div class="steps"><h3>Quy tắc đặt trước giờ cao điểm</h3><ol>'+
-  '<li>Giờ cao điểm 11:00–12:00, chia khung 15 phút, mỗi khung tối đa '+RULE.cap+' chỗ.</li>'+
-  '<li>Phải đặt trước ít nhất '+RULE.leadMin+' phút (khung 11:00 đóng lúc 10:00). Giữ chỗ chưa cần thanh toán.</li>'+
-  '<li>Đến quầy check-in và thanh toán từ '+RULE.beforeMin+' phút trước đến '+RULE.afterMin+' phút sau giờ đã chọn. Quá giờ thì chỗ bị hủy.</li>'+
-  '<li>Check-in và thanh toán xong, đơn đặt trước được đưa lên đầu hàng chờ làm, trước tất cả đơn lấy ngay. Đây là điểm khác với đặt trực tiếp: đơn lấy ngay xếp theo thứ tự thanh toán. Nếu có nhiều đơn đặt trước cùng chờ, khung giờ sớm hơn làm trước.</li></ol>'+
-  '<p class="muted">Để demo, App Bếp có ô “Đặt giờ hệ thống”: ví dụ đặt 10:00 rồi giữ chỗ, sau đó đặt 10:55 hoặc bấm +5 phút để tới giờ check-in. Giờ đã đặt vẫn chạy tiếp và dùng chung cho mọi màn hình; bấm “Giờ thật” để quay về giờ hiện tại.</p></div></div>';
-}
-
 /* ---------- routing ---------- */
 const main=document.getElementById("main");
 function route(){
-  const r=(location.hash||"").replace("#","");
   App.views.clear();
-  document.body.classList.toggle("client-only",r==="client");
-  document.querySelectorAll(".nav a").forEach(a=>{if(a.dataset.r===r)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  document.body.classList.add("client-only");
   const note=App.notice?'<div class="notice">'+esc(App.notice)+'</div>':"";
-  if(r==="client"){main.innerHTML=note+'<div class="solo-client"><div class="phone" id="cv"></div></div>';App.views.add(ClientView(document.getElementById("cv")))}
-  else if(r==="kitchen"){main.innerHTML=note+'<div class="solo-kitchen" id="kv"></div>';App.views.add(KitchenView(document.getElementById("kv")))}
-  else if(r==="both"){main.innerHTML=note+'<div class="both"><div><p class="lbl">App Sinh viên</p><div class="phone" id="cv"></div></div><div style="min-width:0"><p class="lbl">App Bếp</p><div id="kv"></div></div></div>';
-    App.views.add(ClientView(document.getElementById("cv")));App.views.add(KitchenView(document.getElementById("kv")))}
-  else{main.innerHTML=note+homeHtml()}
+  main.innerHTML=note+'<div class="solo-client"><div class="phone" id="cv"></div></div>';
+  App.views.add(ClientView(document.getElementById("cv")));
 }
 window.addEventListener("hashchange",route);
 setInterval(()=>App.views.forEach(v=>v.tick&&v.tick()),1000);

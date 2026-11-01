@@ -62,10 +62,46 @@ head_scripts = (
     f'<script src="https://www.gstatic.com/firebasejs/{FB}/firebase-firestore-compat.js"></script>\n'
     '<script src="firebase-config.js"></script>\n'
 )
-html = ('<!doctype html>\n<html lang="vi">\n<head>\n<meta charset="utf-8">\n'
-        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
-        '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n'
-        + head_scripts + '</head>\n<body>\n' + body + '\n</body>\n</html>\n')
+def page(title, content):
+    return ('<!doctype html>\n<html lang="vi">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+            f'<title>{title}</title>\n'
+            '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n'
+            + head_scripts + '</head>\n<body>\n' + content + '\n</body>\n</html>\n')
+
+# Kitchen + presenter page: the full demo (home, App Bếp, side by side).
+# Not linked from anywhere in the student app; share it with the canteen and the team only.
+KITCHEN_FILE = "bep.html"
+full = body.replace('href="#client" data-r="client"', 'href="./" data-r="client"', 1)
+full = full.replace("'<a class=\"pick\" href=\"#client\">", "'<a class=\"pick\" href=\"./\">", 1)
+(out_dir / KITCHEN_FILE).write_text(page("FoodQ – Bếp", full))
+
+# Student page (index.html): only the student app. The header nav, the home
+# screen and the whole kitchen app are removed from the code, and the hash is
+# ignored, so #kitchen or #both on this address still shows the student app.
+client = body
+client = re.sub(r'\s*<nav class="nav".*?</nav>', '', client, count=1, flags=re.S)
+client = client.replace('<a class="brand" href="#"><i>Q</i>FoodQ</a>', '<span class="brand"><i>Q</i>FoodQ</span>', 1)
+k0 = client.index("/* ---------- kitchen app ---------- */")
+k1 = client.index("/* ---------- routing ---------- */")
+client = client[:k0] + client[k1:]
+ROUTE_NEW = '''function route(){
+  App.views.clear();
+  document.body.classList.add("client-only");
+  const note=App.notice?'<div class="notice">'+esc(App.notice)+'</div>':"";
+  main.innerHTML=note+'<div class="solo-client"><div class="phone" id="cv"></div></div>';
+  App.views.add(ClientView(document.getElementById("cv")));
+}
+window.addEventListener("hashchange",route);'''
+client, n = re.subn(r'function route\(\)\{.*?\n\}\nwindow\.addEventListener\("hashchange",route\);', lambda m: ROUTE_NEW, client, count=1, flags=re.S)
+assert n == 1
+for a, b in [("Tên hiển thị cho bếp", "Tên của bạn (để gọi khi nhận món)"),
+             ('"bếp làm ~"+mmss(q.avg)+"/đơn"', '"trung bình ~"+mmss(q.avg)+" mỗi đơn"')]:
+    assert a in client, a
+    client = client.replace(a, b, 1)
+for bad in ("KitchenView", "#kitchen", "#both", "App Bếp", "Đặt giờ hệ thống", KITCHEN_FILE):
+    assert bad not in client, bad
+html = page("FoodQ – Đặt món căn tin", client)
 (out_dir / "index.html").write_text(html)
 
 cfg = out_dir / "firebase-config.js"
