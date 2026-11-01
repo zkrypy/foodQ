@@ -1,0 +1,814 @@
+<title>FoodQ Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: phone-width student app beside a kitchen board; one header with view switcher */
+:root{
+  --bg:#F4F3F0; --surface:#FFFFFF; --surface-2:#F9F8F6; --ink:#1E1A17; --muted:#6E655D; --line:#E4DFD8;
+  --accent:#EC6417; --accent-ink:#FFFFFF; --accent-soft:#FCE6D7;
+  --ok:#1C8E52; --ok-soft:#DCF1E4; --warn:#B87A00; --warn-soft:#F8EBC9; --cook:#2D63D6; --cook-soft:#E1EAFB;
+  --shadow:0 1px 2px rgba(30,26,23,.06),0 6px 20px rgba(30,26,23,.06);
+  --font:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13110F; --surface:#1C1916; --surface-2:#221E1B; --ink:#F2ECE6; --muted:#A79C92; --line:#342E29;
+  --accent:#FF8641; --accent-ink:#1A0F07; --accent-soft:#3A2316;
+  --ok:#43C985; --ok-soft:#14301F; --warn:#E3B13E; --warn-soft:#352A10; --cook:#7AA2FF; --cook-soft:#1A2440;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13110F; --surface:#1C1916; --surface-2:#221E1B; --ink:#F2ECE6; --muted:#A79C92; --line:#342E29;
+  --accent:#FF8641; --accent-ink:#1A0F07; --accent-soft:#3A2316;
+  --ok:#43C985; --ok-soft:#14301F; --warn:#E3B13E; --warn-soft:#352A10; --cook:#7AA2FF; --cook-soft:#1A2440;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 32px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{text-wrap:balance;margin:0}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:12px;border-bottom:1px solid var(--line);margin-bottom:18px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:-.01em;text-decoration:none;color:var(--ink)}
+.brand i{width:28px;height:28px;border-radius:9px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-style:normal;font-size:15px}
+.nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px;flex-wrap:wrap}
+.nav a{padding:6px 12px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;font-size:13.5px}
+.nav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.mode{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.mode b{width:8px;height:8px;border-radius:50%;background:var(--warn);display:inline-block}
+.mode.db b{background:var(--ok)}
+.notice{background:var(--warn-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:14px}
+
+/* home */
+.home{max-width:960px;margin:0 auto;display:grid;gap:22px}
+.home h1{font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.02em}
+.home p.lead{color:var(--muted);max-width:62ch;margin:6px 0 0}
+.picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.pick{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;text-decoration:none;color:var(--ink);display:grid;gap:6px;box-shadow:var(--shadow);transition:transform .15s}
+.pick:hover{transform:translateY(-2px)}
+.pick .eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700}
+.pick h2{font-size:19px}
+.pick span{color:var(--muted);font-size:14px}
+.steps{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.steps h3{font-size:15px;margin-bottom:8px}
+.steps ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink)}
+.steps .muted{color:var(--muted);font-size:13.5px;margin:10px 0 0}
+
+/* layout of views */
+.both{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:22px;align-items:start;max-width:1400px;margin:0 auto}
+@media (max-width:900px){.both{grid-template-columns:minmax(0,1fr)}}
+.lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 8px 4px}
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;max-width:420px;margin:0 auto;width:100%}
+.solo-client{max-width:440px;margin:0 auto}
+
+/* client */
+.c-head{background:var(--accent);color:var(--accent-ink);padding:16px 18px 14px}
+.c-head .shop{font-weight:800;font-size:18px}
+.c-head .sub{font-size:13px;opacity:.9}
+.c-body{padding:14px 14px 0;display:grid;gap:12px}
+.lookup{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.lookup input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font:inherit;font-size:14px;background:var(--surface);color:var(--ink)}
+.lookup button{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:7px 12px;font-weight:600;font-size:13.5px}
+.chip-src{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--muted);justify-self:start}
+.active-order{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--cook-soft);border-radius:12px;padding:10px 12px;font-size:14px;border:0;text-align:left;width:100%}
+.active-order.ready{background:var(--ok-soft)}
+.active-order strong{font-size:15px}
+.menu{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px}
+.item.out{opacity:.5}
+.sw{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+.item .nm{font-weight:700}
+.item .ds{font-size:12.5px;color:var(--muted)}
+.item .pr{font-size:13.5px;color:var(--accent);font-weight:700}
+.qty{display:flex;align-items:center;gap:8px}
+.qty button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:17px;line-height:1}
+.qty button.add{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.qty span{min-width:14px;text-align:center;font-weight:700}
+.tag-out{font-size:12px;font-weight:700;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:3px 8px}
+.bar{position:sticky;bottom:0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--surface) 70%,transparent)}
+.cta{width:100%;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);padding:14px 16px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cta[disabled]{opacity:.45;cursor:not-allowed}
+.cta.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);justify-content:center}
+.back{border:0;background:none;color:var(--accent-ink);font-weight:600;padding:0;margin-bottom:6px;font-size:13.5px}
+.sec{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.sec h3{font-size:14px;margin-bottom:8px}
+.line{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:3px 0}
+.line.total{border-top:1px dashed var(--line);margin-top:6px;padding-top:8px;font-weight:800;font-size:16px}
+.slots{display:flex;flex-wrap:wrap;gap:6px}
+.slot{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 10px;font-size:13.5px;font-weight:600;display:grid;text-align:left}
+.slot small{font-weight:500;color:var(--muted);font-size:11.5px}
+.slot[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.slot[disabled]{opacity:.45}
+.field{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.field input{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;background:var(--surface);color:var(--ink)}
+.qrbox{display:grid;justify-items:center;gap:8px;text-align:center}
+.qrbox canvas{background:#fff;border-radius:12px;padding:8px;width:184px;height:184px;max-width:100%}
+.qrbox .amt{font-size:22px;font-weight:800}
+.qrbox .memo{font-size:13px;color:var(--muted)}
+.demo-note{font-size:12px;color:var(--muted);text-align:center}
+.spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .9s linear infinite;margin:6px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* tracker */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:600}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ticket{text-align:center;display:grid;gap:2px;padding:6px 0 2px}
+.ticket .k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700}
+.ticket .big{font-size:72px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.ticket .code{font-size:13px;color:var(--muted)}
+.stepper{display:grid;gap:0}
+.st{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;position:relative;padding-bottom:12px}
+.st:last-child{padding-bottom:0}
+.st::before{content:"";position:absolute;left:12px;top:24px;bottom:0;width:2px;background:var(--line)}
+.st:last-child::before{display:none}
+.st i{width:26px;height:26px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-style:normal;font-size:13px;color:var(--surface);font-weight:800;position:relative;z-index:1}
+.st.done i{background:var(--ok)}
+.st.now i{background:var(--accent);box-shadow:0 0 0 5px var(--accent-soft)}
+.st.now.cook i{background:var(--cook);box-shadow:0 0 0 5px var(--cook-soft)}
+.st b{display:block;font-size:14.5px}
+.st small{color:var(--muted);font-size:12.5px}
+.st.todo b{color:var(--muted);font-weight:500}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tile .k{font-size:12px;color:var(--muted)}
+.tile .v{font-size:26px;font-weight:800;line-height:1.15}
+.tile .v.eta{color:var(--cook)}
+.tile .s{font-size:11.5px;color:var(--muted)}
+.prog{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog span{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .6s}
+.callout{font-size:13.5px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.callout b{color:var(--ink)}
+.ready-banner{background:var(--ok);color:#fff;border-radius:14px;padding:16px;text-align:center;display:grid;gap:4px;animation:pop .5s ease}
+.ready-banner strong{font-size:19px}
+@keyframes pop{0%{transform:scale(.96);opacity:.4}100%{transform:none;opacity:1}}
+
+/* kitchen */
+.k-wrap{display:grid;gap:14px;min-width:0}
+.solo-kitchen{max-width:1300px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:24px;font-weight:800}
+.stat.call{background:var(--ok-soft);border-color:transparent}
+.stat.call .v{color:var(--ok)}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.controls .grp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.controls .k{color:var(--muted)}
+.stepbtn{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-weight:700}
+.toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
+.toggle[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);text-decoration:line-through}
+.danger{border:1px solid var(--line);background:none;border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--muted);margin-left:auto}
+.danger.arm{background:#C2361E;border-color:#C2361E;color:#fff}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;align-items:start}
+.col.reserve h3{color:var(--warn)}
+.col.reserve .tk{border-top-color:var(--warn)}
+.col.reserve .tk.open{background:var(--warn-soft)}
+.col.reserve .tk.gone{opacity:.6}
+.col.reserve .tk .act{background:var(--warn);color:#fff}
+.col.reserve .tk .act.ghost{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+.slotbar{display:flex;flex-wrap:wrap;gap:4px;padding:0 4px;font-size:11.5px;color:var(--muted)}
+.slotbar span{border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.phase{font-size:12.5px;font-weight:600}
+.phase.open{color:var(--warn)} .phase.gone{color:#C2361E}
+.tag-r{font-size:11.5px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:1px 6px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px;text-align:left;display:grid;gap:2px;font-weight:700;font-size:14px}
+.seg button small{font-weight:500;color:var(--muted);font-size:12px}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.rule{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+.window{border-radius:12px;padding:12px;display:grid;gap:4px;text-align:center}
+.window.early{background:var(--surface-2);border:1px solid var(--line)}
+.window.open{background:var(--warn-soft)}
+.window.gone{background:var(--surface-2);border:1px dashed #C2361E}
+.window strong{font-size:16px}
+.window .cd{font-size:26px;font-weight:800}
+.clock{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.clock b{font-size:15px}
+.timein{border:1px solid var(--line);border-radius:8px;padding:4px 8px;font:inherit;font-size:13.5px;background:var(--surface);color:var(--ink)}
+.clock .demo{font-size:11px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:1px 6px}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:grid;gap:8px;min-height:120px;align-content:start}
+.col h3{font-size:14px;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
+.col h3 span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:12.5px}
+.col.new h3{color:var(--accent)} .col.cooking h3{color:var(--cook)} .col.ready h3{color:var(--ok)}
+.empty{font-size:13px;color:var(--muted);padding:8px 4px}
+.tk{border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:6px;background:var(--surface-2);border-top:4px solid var(--accent)}
+.col.cooking .tk{border-top-color:var(--cook)}
+.col.ready .tk{border-top-color:var(--ok)}
+.tk.late{background:var(--warn-soft)}
+.tk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tk-h b{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.tk-h .who{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow-wrap:anywhere}
+.tk ul{margin:0;padding:0;list-style:none;font-size:14px}
+.tk li{display:flex;gap:6px}
+.tk li em{font-style:normal;font-weight:800;color:var(--accent);min-width:26px}
+.tk-meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.pill{border-radius:999px;padding:1px 8px;background:var(--surface);border:1px solid var(--line);font-weight:600}
+.tk .act{border:0;border-radius:10px;padding:9px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
+.col.cooking .tk .act{background:var(--cook);color:#fff}
+.col.ready .tk .act{background:var(--ok);color:#fff}
+.donecount{font-size:12.5px;color:var(--muted);text-align:right}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow);z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <a class="brand" href="#"><i>Q</i>FoodQ</a>
+  <nav class="nav" aria-label="Chọn màn hình">
+    <a href="#client" data-r="client">App Sinh viên</a>
+    <a href="#kitchen" data-r="kitchen">App Bếp</a>
+    <a href="#both" data-r="both">Song song</a>
+  </nav>
+  <div class="mode" id="mode"><b></b><span>Đang khởi động…</span></div>
+</header>
+<main id="main"></main>
+<div id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- data ---------- */
+const MENU=[
+  {id:"com-ga",name:"Cơm gà xối mỡ",desc:"Gà giòn, cơm chiên, dưa leo",price:35000,tone:"#D9932C",ab:"CG"},
+  {id:"bun-bo",name:"Bún bò Huế",desc:"Giò heo, chả cua, rau thơm",price:40000,tone:"#C8442A",ab:"BB"},
+  {id:"com-tam",name:"Cơm tấm sườn",desc:"Sườn nướng, bì, chả trứng",price:35000,tone:"#A8682F",ab:"CT"},
+  {id:"mi-xao",name:"Mì xào bò",desc:"Bò mềm, cải ngọt",price:35000,tone:"#7E5233",ab:"MX"},
+  {id:"bun-moc",name:"Bún mọc",desc:"Nước dùng xương heo, mọc và sườn heo",price:30000,tone:"#B5563B",ab:"BM"},
+  {id:"nui-xao",name:"Nui xào bò",desc:"Bò xào, cà chua, rau củ",price:30000,tone:"#C9773A",ab:"NX"},
+  {id:"mi-nuoc",name:"Mì nước",desc:"Thịt bằm, rau cải, nước dùng nóng",price:30000,tone:"#A6703E",ab:"MN"},
+  {id:"tra-da",name:"Trà đá",desc:"Ly lớn",price:5000,tone:"#9C8A55",ab:"TĐ"},
+  {id:"nuoc-cam",name:"Nước cam",desc:"Cam vắt, ít đường",price:15000,tone:"#E27A1C",ab:"NC"},
+  {id:"dua-tuoi",name:"Dừa tươi",desc:"Nguyên trái, ướp lạnh",price:15000,tone:"#5E8F3E",ab:"DT"}
+];
+/* Pre-order rules: peak 11:00–12:00, 15-minute slots, 10 bookings per slot,
+   book at least 60 min ahead, check in and pay from 5 min before to 15 min after the slot. */
+const RULE={slots:["11:00","11:15","11:30","11:45"],cap:10,leadMin:60,beforeMin:5,afterMin:15};
+const MIN=60000;
+
+/* ---------- helpers ---------- */
+const fmt=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const code=o=>(o.kind==="reserve"?"R-":"FQ-")+String(o.id||"").slice(0,4).toUpperCase();
+/* Queue number shown to people: pre-orders carry a P prefix (P106), walk-ins stay plain (101). */
+const qno=o=>(o.kind==="reserve"?"P":"")+o.number;
+function mmss(sec){sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(s).padStart(2,"0")}
+const hm=ms=>{const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")};
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>{t.hidden=true},2800)}
+
+/* ---------- clock (shared demo offset) ---------- */
+/* Demo clock: the kitchen can set the system time; it is stored as an offset so every device shows the same time. */
+const now=()=>Date.now()+(Number(App.data.clockOffset)||0);
+function atToday(hhmm,base){const d=new Date(base==null?now():base);const p=hhmm.split(":");d.setHours(+p[0],+p[1],0,0);return d.getTime()}
+
+/* ---------- reservation logic ---------- */
+function phase(o,t){
+  if(o.status==="noshow")return"gone";
+  if(o.status!=="reserved")return null;
+  if(t<o.slotAt-RULE.beforeMin*MIN)return"early";
+  if(t<=o.slotAt+RULE.afterMin*MIN)return"open";
+  return"gone";
+}
+const winOpen=o=>o.slotAt-RULE.beforeMin*MIN, winClose=o=>o.slotAt+RULE.afterMin*MIN;
+function slotState(hhmm,d,t){
+  const at=atToday(hhmm,t);
+  const used=d.orders.filter(o=>o.kind==="reserve"&&o.slot===hhmm&&o.status!=="noshow").length;
+  const cutoff=at-RULE.leadMin*MIN;
+  return{hhmm,at,used,left:RULE.cap-used,cutoff,closed:t>cutoff,full:used>=RULE.cap};
+}
+const key=o=>Number(o.priorityAt||o.createdAt||0);
+/* Checked-in pre-orders always go to the head of the waiting queue (by slot, then check-in time); walk-ins follow in payment order. */
+const tier=o=>o.kind==="reserve"&&o.checkinAt?0:1;
+const byQueue=(a,b)=>tier(a)-tier(b)||(tier(a)===0?(a.slotAt-b.slotAt)||(a.checkinAt-b.checkinAt):key(a)-key(b))||(a.number||0)-(b.number||0);
+
+/* ---------- stores ---------- */
+function localStore(){
+  const KEY="foodq-demo-state-v2";
+  const blank=()=>({orders:{},last:100,soldOut:[],cooks:2,clockOffset:null});
+  let st=lsGet(KEY,null)||blank();
+  const subs=new Set();let bc=null;
+  try{bc=new BroadcastChannel("foodq-demo-v2")}catch(e){}
+  const snap=()=>({orders:Object.values(st.orders),soldOut:st.soldOut||[],cooks:st.cooks||2,clockOffset:st.clockOffset==null?null:st.clockOffset,ready:true,stale:false});
+  const emit=()=>{const s=snap();subs.forEach(f=>f(s))};
+  const reload=()=>{st=lsGet(KEY,null)||blank();emit()};
+  const onStorage=e=>{if(e.key===KEY)reload()};
+  if(bc)bc.onmessage=reload;
+  window.addEventListener("storage",onStorage);
+  const save=()=>{lsSet(KEY,st);try{bc&&bc.postMessage(1)}catch(e){}emit()};
+  return{mode:"local",
+    subscribe(f){subs.add(f);f(snap());return()=>subs.delete(f)},
+    async createOrder(o){const ord=Object.assign({},o,{id:rid()});if(ord.status!=="reserved"){st.last=(st.last||100)+1;ord.number=st.last}st.orders[ord.id]=ord;save();return ord},
+    async checkin(id,p){const o=st.orders[id];if(!o)throw new Error("missing");st.last=(st.last||100)+1;Object.assign(o,p,{number:st.last});save();return Object.assign({},o)},
+    async updateOrder(id,p){if(!st.orders[id])return;Object.assign(st.orders[id],p);save()},
+    async setConfig(p){Object.assign(st,p);save()},
+    async reset(){const keep={cooks:st.cooks,clockOffset:st.clockOffset};st=Object.assign(blank(),keep);save()},
+    close(){subs.clear();if(bc){bc.onmessage=null;try{bc.close()}catch(e){}}window.removeEventListener("storage",onStorage)}
+  };
+}
+function dbStore(db){
+  const col=db.collection("orders"),cfg=db.doc("config/settings"),ctr=db.doc("config/counter");
+  let orders=[],cfgData={},ready=false,stale=false;const subs=new Set(),unsubs=[];
+  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
+  const emit=()=>{const s=snap();subs.forEach(f=>f(s))};
+  const timer=setTimeout(()=>{stale=true;emit()},10000);
+  unsubs.push(col.limit(500).onSnapshot(s=>{
+    orders=s.docs.map(d=>Object.assign({},d.data(),{id:d.id}));ready=true;
+    if(!s.metadata.fromCache){stale=false;clearTimeout(timer)}emit();
+  },()=>{stale=true;ready=true;clearTimeout(timer);emit()}));
+  unsubs.push(cfg.onSnapshot(s=>{cfgData=s.exists?Object.assign({},s.data()):{};emit()},()=>{}));
+  const maxSeen=()=>orders.reduce((m,o)=>Math.max(m,Number(o.number)||0),100);
+  async function nextNumber(){
+    const holder=rid();
+    for(let i=0;i<24;i++){
+      const r=await ctr.acquire({holder,ttlMs:4000});
+      if(r&&r.acquired){
+        const s=await ctr.get();
+        const last=(s.exists&&Number(s.data().last))||100;
+        const n=Math.max(last,maxSeen())+1;
+        await ctr.set({last:n});return n;
+      }
+      await sleep(180+Math.random()*320);
+    }
+    return maxSeen()+1;
+  }
+  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
+  return{mode:"db",
+    subscribe(f){subs.add(f);f(snap());return()=>subs.delete(f)},
+    async createOrder(o){const ord=Object.assign({},o);if(ord.status!=="reserved")ord.number=await nextNumber();const ref=col.doc();await ref.set(ord);return Object.assign({},ord,{id:ref.id})},
+    async checkin(id,p){const n=await nextNumber();const patch=Object.assign({},p,{number:n});await col.doc(id).update(patch);const o=orders.find(x=>x.id===id)||{};return Object.assign({},o,patch,{id})},
+    async updateOrder(id,p){await col.doc(id).update(p)},
+    async setConfig(p){await cfg.set(Object.assign(cfgBase(),p))},
+    async reset(){for(const o of orders.slice()){await col.doc(o.id).delete()}await ctr.set({last:100});await cfg.set(Object.assign(cfgBase(),{soldOut:[]}))},
+    close(){unsubs.forEach(u=>{try{u()}catch(e){}});subs.clear();clearTimeout(timer)}
+  };
+}
+
+/* ---------- app shell ---------- */
+const App={store:null,unsub:null,data:{orders:[],soldOut:[],cooks:2,clockOffset:null,ready:false,stale:false},views:new Set(),notice:""};
+function useStore(s){
+  if(App.unsub)App.unsub();
+  if(App.store&&App.store.close)App.store.close();
+  App.store=s;
+  App.unsub=s.subscribe(d=>{App.data=d;App.views.forEach(v=>v.onData());renderMode()});
+  renderMode();
+}
+const READONLY=["invalid_argument","not_granted","revoked","capability_disabled","capability_removed"];
+async function act(fn){
+  try{return await fn()}
+  catch(e){
+    if(App.store.mode==="db"&&e&&READONLY.includes(e.code)){
+      App.notice="Tài khoản này chỉ được xem dữ liệu chung, nên demo chuyển sang chạy trên máy này.";
+      useStore(localStore());route();
+      return await fn();
+    }
+    toast("Chưa lưu được, thử lại sau giây lát.");throw e;
+  }
+}
+function renderMode(){
+  const m=document.getElementById("mode");
+  const db=App.store&&App.store.mode==="db";
+  m.className="mode"+(db?" db":"");
+  m.querySelector("span").textContent=db?(App.data.stale?"Đồng bộ trực tuyến · mạng chậm":"Đồng bộ trực tuyến giữa các thiết bị"):"Chạy trên máy này";
+}
+
+/* ---------- queue maths ---------- */
+function avgPrep(orders){
+  const xs=orders.filter(o=>o.cookingAt&&o.readyAt&&o.readyAt>o.cookingAt).sort((a,b)=>b.readyAt-a.readyAt).slice(0,8).map(o=>(o.readyAt-o.cookingAt)/1000);
+  if(!xs.length)return 180;
+  return Math.min(900,Math.max(20,xs.reduce((s,x)=>s+x,0)/xs.length));
+}
+function queueInfo(order,d,t){
+  const avg=avgPrep(d.orders),cooks=Math.max(1,d.cooks||2);
+  const active=d.orders.filter(o=>o.status==="paid"||o.status==="cooking");
+  const ahead=active.filter(o=>o.id!==order.id&&(o.status==="cooking"||byQueue(o,order)<0)).length;
+  if(order.status!=="paid"&&order.status!=="cooking")return{ahead:0,eta:0,avg};
+  const lanes=new Array(cooks).fill(0);
+  const cooking=active.filter(o=>o.status==="cooking").sort((a,b)=>a.cookingAt-b.cookingAt);
+  const waiting=active.filter(o=>o.status==="paid").sort(byQueue);
+  for(const o of cooking.concat(waiting)){
+    const rem=o.status==="cooking"?Math.max(10,avg-(t-o.cookingAt)/1000):avg;
+    const i=lanes.indexOf(Math.min.apply(null,lanes));lanes[i]+=rem;
+    if(o.id===order.id)return{ahead,eta:lanes[i],avg};
+  }
+  return{ahead,eta:avg,avg};
+}
+const calling=d=>d.orders.filter(o=>o.status==="ready").sort((a,b)=>b.readyAt-a.readyAt)[0];
+
+/* ---------- QR (illustration only) ---------- */
+function drawQR(cv,seedStr){
+  const n=25,px=8,ctx=cv.getContext("2d");cv.width=cv.height=n*px;
+  let seed=0;for(const ch of seedStr)seed=(seed*31+ch.charCodeAt(0))>>>0;
+  const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);ctx.fillStyle="#1E1A17";
+  const finder=(x,y)=>{ctx.fillRect(x*px,y*px,7*px,7*px);ctx.fillStyle="#fff";ctx.fillRect((x+1)*px,(y+1)*px,5*px,5*px);ctx.fillStyle="#1E1A17";ctx.fillRect((x+2)*px,(y+2)*px,3*px,3*px)};
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9);if(!inF&&rnd()<.5)ctx.fillRect(x*px,y*px,px,px)}
+  finder(0,0);finder(n-7,0);finder(0,n-7);
+}
+
+/* ---------- sound ---------- */
+let audioCtx=null;
+function ensureAudio(){try{if(!audioCtx){const A=window.AudioContext||window.webkitAudioContext;if(A)audioCtx=new A()}if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume()}catch(e){}}
+function chime(){
+  if(audioCtx){try{[880,1320].forEach((f,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=f;o.type="sine";const t=audioCtx.currentTime+i*.18;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+.35);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+.4)})}catch(e){}}
+  try{navigator.vibrate&&navigator.vibrate([120,60,120])}catch(e){}
+}
+
+/* ---------- client app ---------- */
+function ClientView(root){
+  const s={screen:"menu",cart:{},mode:"now",slot:null,name:lsGet("foodq-name",""),payStage:0,trackId:null,payCode:"",ciStage:0,renderedPhase:null};
+  let my=lsGet("foodq-my-v2",[]);
+  let lastStatus={};
+  const myOrders=()=>my.map(id=>App.data.orders.find(o=>o.id===id)).filter(Boolean).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const isLive=o=>o.status!=="done"&&o.status!=="noshow";
+  const activeMine=()=>myOrders().filter(isLive);
+  const items=()=>MENU.filter(m=>s.cart[m.id]>0).map(m=>({id:m.id,name:m.name,price:m.price,qty:s.cart[m.id]}));
+  const total=()=>items().reduce((a,i)=>a+i.price*i.qty,0);
+  const count=()=>items().reduce((a,i)=>a+i.qty,0);
+
+  function head(sub,back){
+    return '<div class="c-head">'+(back?'<button class="back" data-a="back">‹ Quay lại</button>':"")+
+      '<div class="shop">Căn tin cổng trường</div><div class="sub">'+sub+'</div></div>';
+  }
+  function statusText(o){
+    if(o.status==="reserved")return phase(o,now())==="gone"?"Quá giờ check-in":"Đã giữ chỗ "+o.slot;
+    return o.status==="paid"?"Chờ bếp xử lý":o.status==="cooking"?"Đang chế biến":o.status==="ready"?"Đã xong, mời đến nhận":o.status==="noshow"?"Đã hủy chỗ":"Đã nhận món";
+  }
+  function menuScreen(){
+    const live=activeMine()[0];
+    let h=head('Bây giờ <b class="num" data-clock>'+hm(now())+'</b> · Nhận món tại quầy FoodQ')+'<div class="c-body">';
+    h+='<span class="chip-src">Mở từ mã QR trong nhóm chat lớp</span>';
+    h+='<div class="lookup"><label class="k" for="lookup-code">Đã đặt ở máy khác?</label><input id="lookup-code" maxlength="12" placeholder="Nhập số hoặc mã đơn, vd P106" autocomplete="off"><button data-a="lookup">Theo dõi</button></div>';
+    if(live){h+='<button class="active-order'+(live.status==="ready"?" ready":"")+'" data-a="track" data-id="'+esc(live.id)+'"><span>'+(live.number?'Đơn số <strong class="num">'+qno(live)+'</strong>':'Mã <strong>'+code(live)+'</strong>')+' · '+statusText(live)+'</span><span>Xem ›</span></button>'}
+    h+='<div class="menu">';
+    for(const m of MENU){
+      const out=App.data.soldOut.includes(m.id),q=s.cart[m.id]||0;
+      h+='<div class="item'+(out?" out":"")+'"><div class="sw" style="background:'+m.tone+'">'+m.ab+'</div>'+
+        '<div style="min-width:0"><div class="nm">'+m.name+'</div><div class="ds">'+m.desc+'</div><div class="pr num">'+fmt(m.price)+'</div></div>'+
+        (out?'<span class="tag-out">Hết món</span>':'<div class="qty">'+(q?'<button data-a="dec" data-id="'+m.id+'" aria-label="Bớt '+m.name+'">−</button><span class="num">'+q+'</span>':"")+'<button class="add" data-a="inc" data-id="'+m.id+'" aria-label="Thêm '+m.name+'">+</button></div>')+
+      '</div>';
+    }
+    h+='</div></div><div class="bar"><button class="cta" data-a="checkout"'+(count()?"":" disabled")+'><span>'+(count()?count()+" món · Tiếp tục":"Chọn món để đặt")+'</span><span class="num">'+(count()?fmt(total()):"")+'</span></button></div>';
+    return h;
+  }
+  function slotsHtml(){
+    const t=now();
+    const states=RULE.slots.map(x=>slotState(x,App.data,t));
+    if(s.slot){const cur=states.find(x=>x.hhmm===s.slot);if(!cur||cur.closed||cur.full)s.slot=null}
+    return '<div class="slots" id="slots">'+states.map(st=>{const dis=st.closed||st.full;
+      const sub=st.closed?"Đã đóng lúc "+hm(st.cutoff):st.full?"Đã đầy":"Còn "+st.left+"/"+RULE.cap+" · đặt trước "+hm(st.cutoff);
+      return '<button class="slot" data-a="slot" data-id="'+st.hhmm+'" aria-pressed="'+(s.slot===st.hhmm)+'"'+(dis?" disabled":"")+'>'+st.hhmm+'<small>'+sub+'</small></button>'}).join("")+'</div>';
+  }
+  function checkoutScreen(){
+    let h=head("Xác nhận đơn",s.payStage===0)+'<div class="c-body">';
+    h+='<div class="sec"><h3>Món đã chọn</h3>'+items().map(i=>'<div class="line"><span>'+i.qty+' × '+i.name+'</span><span class="num">'+fmt(i.price*i.qty)+'</span></div>').join("")+
+       '<div class="line total"><span>Tổng</span><span class="num">'+fmt(total())+'</span></div></div>';
+    if(s.payStage===0){
+      h+='<div class="seg" role="group" aria-label="Cách nhận món">'+
+        '<button data-a="mode" data-id="now" aria-pressed="'+(s.mode==="now")+'">Lấy ngay<small>Thanh toán bây giờ, vào hàng chờ luôn</small></button>'+
+        '<button data-a="mode" data-id="reserve" aria-pressed="'+(s.mode==="reserve")+'">Đặt trước giờ cao điểm<small>Giữ chỗ 11:00–12:00, check-in là lên đầu hàng chờ</small></button></div>';
+      if(s.mode==="reserve"){
+        h+='<div class="sec"><h3>Chọn khung giờ (mỗi khung '+RULE.cap+' chỗ)</h3>'+slotsHtml()+
+          '<p class="rule">Đặt trước ít nhất '+RULE.leadMin+' phút. Chưa cần thanh toán. Đến quầy check-in và thanh toán trong khoảng '+RULE.beforeMin+' phút trước đến '+RULE.afterMin+' phút sau giờ đã chọn; trễ hơn thì chỗ bị hủy. Check-in và thanh toán xong, đơn của bạn được đưa lên đầu hàng chờ, trước các đơn lấy ngay.</p></div>';
+      }
+      h+='<label class="field" for="cus-name">Tên hiển thị cho bếp<input id="cus-name" maxlength="24" placeholder="Ví dụ: Vân Anh" value="'+esc(s.name)+'"></label></div>';
+      h+=s.mode==="reserve"
+        ?'<div class="bar"><button class="cta" data-a="reserve"'+(s.slot?"":" disabled")+'><span>'+(s.slot?"Giữ chỗ lúc "+s.slot:"Chọn khung giờ")+'</span><span>Chưa trả tiền</span></button></div>'
+        :'<div class="bar"><button class="cta" data-a="pay"><span>Thanh toán bằng VietQR</span><span class="num">'+fmt(total())+'</span></button></div>';
+    }else if(s.payStage===1){
+      h+=qrBlock(total(),s.payCode)+'</div><div class="bar"><button class="cta" data-a="paid"><span>Tôi đã chuyển khoản</span><span>›</span></button></div>';
+    }else{
+      h+='<div class="sec" style="text-align:center"><div class="spinner"></div><b>'+(s.mode==="reserve"?"Đang giữ chỗ…":"Đang xác nhận thanh toán…")+'</b></div></div>';
+    }
+    return h;
+  }
+  function qrBlock(amount,memo){
+    return '<div class="sec qrbox"><h3>Quét mã bằng app ngân hàng</h3><canvas id="qr" width="200" height="200" aria-label="Mã QR minh họa"></canvas>'+
+      '<div class="amt num">'+fmt(amount)+'</div><div class="memo">Nội dung chuyển khoản: <b>'+esc(memo)+'</b><br>Tiền chuyển thẳng vào tài khoản căn tin</div></div>'+
+      '<p class="demo-note">Bản demo: mã QR chỉ để minh họa, không có giao dịch thật.</p>';
+  }
+  function reservedBlock(o){
+    const t=now(),ph=phase(o,t);s.renderedPhase=ph;
+    let h='<div class="ticket"><div class="k">Mã đặt chỗ</div><div class="big" style="font-size:52px">'+code(o)+'</div><div class="code">Khung giờ <b>'+o.slot+'</b> · Check-in '+hm(winOpen(o))+'–'+hm(winClose(o))+'</div></div>';
+    if(ph==="early")h+='<div class="window early"><strong>Chưa đến giờ check-in</strong><span>Mở lúc '+hm(winOpen(o))+', còn</span><div class="cd num" data-until="'+winOpen(o)+'">–</div><span>Bạn chưa cần thanh toán.</span></div>';
+    else if(ph==="open"){
+      h+='<div class="window open"><strong>Đã mở check-in</strong><span>Đến quầy FoodQ, đọc mã '+code(o)+' và thanh toán. Đóng sau</span><div class="cd num" data-until="'+winClose(o)+'">–</div></div>';
+      if(s.ciStage===1)h+=qrBlock(o.total,"FOODQ "+code(o));
+      if(s.ciStage===2)h+='<div class="sec" style="text-align:center"><div class="spinner"></div><b>Đang check-in…</b></div>';
+    }
+    else h+='<div class="window gone"><strong>Đã quá giờ check-in</strong><span>Check-in đóng lúc '+hm(winClose(o))+'. Chỗ đã được trả lại cho bạn khác.</span></div>';
+    return h;
+  }
+  function stepper(o){
+    const res=o.kind==="reserve";
+    const steps=res
+      ?[["reserved","Đã giữ chỗ "+o.slot,"Chưa cần thanh toán"],["paid","Check-in và thanh toán","Đơn được đưa lên đầu hàng chờ"],["cooking","Đang chế biến","Bếp đang làm món của bạn"],["ready","Đã xong, mời đến nhận","Ứng dụng sẽ báo khi món xong"]]
+      :[["paid","Đã thanh toán, chờ bếp","Đơn đã vào hàng chờ của bếp"],["cooking","Đang chế biến","Bếp đang làm món của bạn"],["ready","Đã xong, mời đến nhận","Ứng dụng sẽ báo khi món xong"]];
+    const order=steps.map(x=>x[0]);
+    let idx=o.status==="done"?steps.length:order.indexOf(o.status);
+    return '<div class="sec stepper">'+steps.map((st,i)=>{const cls=i<idx?"done":i===idx?"now"+(st[0]==="cooking"?" cook":""):"todo";
+      return '<div class="st '+cls+'"><i>'+(cls==="done"?"✓":i+1)+'</i><div><b>'+st[1]+'</b>'+(cls.indexOf("now")===0?'<small>'+st[2]+'</small>':"")+'</div></div>'}).join("")+'</div>';
+  }
+  function trackScreen(){
+    const mine=myOrders();
+    const o=mine.find(x=>x.id===s.trackId)||activeMine()[0]||mine[0];
+    let h=head("Theo dõi đơn hàng",true)+'<div class="c-body">';
+    if(!o){h+='<div class="sec">Không tìm thấy đơn. Có thể dữ liệu demo vừa được xóa.</div></div><div class="bar"><button class="cta ghost" data-a="back">Về menu</button></div>';return h}
+    s.trackId=o.id;
+    const live=activeMine();
+    if(live.length>1)h+='<div class="tabs">'+live.map(x=>'<button data-a="track" data-id="'+esc(x.id)+'" aria-pressed="'+(x.id===o.id)+'">'+(x.number?"Đơn "+qno(x):code(x))+'</button>').join("")+'</div>';
+    if(o.status==="reserved"||o.status==="noshow"){h+=reservedBlock(o)}
+    else{
+      s.renderedPhase=null;
+      if(o.status==="ready")h+='<div class="ready-banner"><strong>Món của bạn đã xong!</strong><span>Đến quầy FoodQ và đọc số <b class="num">'+qno(o)+'</b> để nhận món.</span></div>';
+      h+='<div class="ticket"><div class="k">Số thứ tự của bạn</div><div class="big num">'+qno(o)+'</div><div class="code">'+code(o)+(o.kind==="reserve"?' · Đặt trước '+o.slot+' · check-in '+hm(o.checkinAt):' · Lấy ngay')+'</div></div>';
+      if(o.status==="paid"||o.status==="cooking"){
+        h+='<div class="tiles"><div class="tile"><div class="k">Đơn trước bạn</div><div class="v num" data-ahead>–</div><div class="s">đang chờ hoặc đang làm</div></div>'+
+           '<div class="tile"><div class="k">Dự kiến xong sau</div><div class="v eta num" data-eta>–</div><div class="s" data-avg></div></div></div>'+
+           '<div class="prog" aria-hidden="true"><span data-prog style="width:0%"></span></div>';
+      }
+    }
+    h+=stepper(o);
+    if(o.status!=="reserved"&&o.status!=="noshow"){const c=calling(App.data);h+='<div class="callout"><span>Quầy đang gọi số: <b class="num">'+(c?qno(c):"–")+'</b></span><span>'+App.data.orders.filter(x=>x.status==="cooking").length+' đơn đang làm</span></div>'}
+    h+='<div class="sec">'+(o.items||[]).map(i=>'<div class="line"><span>'+i.qty+' × '+esc(i.name)+'</span><span class="num">'+fmt(i.price*i.qty)+'</span></div>').join("")+'<div class="line total"><span>'+(o.status==="reserved"||o.status==="noshow"?"Thanh toán khi check-in":"Đã thanh toán")+'</span><span class="num">'+fmt(o.total)+'</span></div></div>';
+    h+='</div><div class="bar">';
+    if(o.status==="reserved"&&phase(o,now())==="open"){
+      h+=s.ciStage===0?'<button class="cta" data-a="ci-start"><span>Tôi đã đến quầy · Check-in</span><span class="num">'+fmt(o.total)+'</span></button>'
+        :s.ciStage===1?'<button class="cta" data-a="ci-paid"><span>Tôi đã chuyển khoản</span><span>›</span></button>':"";
+    }else h+='<button class="cta ghost" data-a="back">Đặt thêm món</button>';
+    return h+'</div>';
+  }
+  function render(){
+    const ae=document.activeElement,keep=ae&&ae.id==="lookup-code"&&root.contains(ae)?ae.value:null;
+    root.innerHTML=s.screen==="menu"?menuScreen():s.screen==="checkout"?checkoutScreen():trackScreen();
+    const cv=root.querySelector("#qr");if(cv)drawQR(cv,s.payCode||s.trackId||"x");
+    if(keep!=null){const li=root.querySelector("#lookup-code");if(li){li.value=keep;li.focus()}}
+    tick();
+  }
+  function tick(){
+    const t=now();
+    root.querySelectorAll("[data-clock]").forEach(el=>{el.textContent=hm(t)});
+    root.querySelectorAll("[data-until]").forEach(el=>{el.textContent=mmss((Number(el.dataset.until)-t)/1000)});
+    if(s.screen!=="track")return;
+    const o=App.data.orders.find(x=>x.id===s.trackId);if(!o)return;
+    if(o.status==="reserved"){if(phase(o,t)!==s.renderedPhase){s.ciStage=0;render()}return}
+    const q=queueInfo(o,App.data,t);
+    const a=root.querySelector("[data-ahead]"),e=root.querySelector("[data-eta]"),av=root.querySelector("[data-avg]"),p=root.querySelector("[data-prog]");
+    if(a)a.textContent=q.ahead;
+    if(e)e.textContent=q.eta<15?"Sắp xong":mmss(q.eta);
+    if(av)av.textContent="bếp làm ~"+mmss(q.avg)+"/đơn";
+    if(p){const elapsed=(t-(o.status==="cooking"?o.cookingAt:(o.paidAt||o.createdAt)))/1000;
+      const pct=o.status==="cooking"?50+50*Math.min(1,elapsed/Math.max(q.avg,1)):Math.min(45,45*elapsed/(elapsed+Math.max(q.eta,1)));p.style.width=Math.min(98,pct)+"%"}
+  }
+  function onData(){
+    const mine=myOrders();
+    for(const o of mine){const prev=lastStatus[o.id];
+      if(prev&&prev!=="ready"&&o.status==="ready"){chime();toast("Đơn số "+qno(o)+" đã xong, mời đến nhận!");if(s.screen!=="checkout"){s.screen="track";s.trackId=o.id}}
+      if(prev==="reserved"&&o.status==="paid"&&s.ciStage!==2){toast("Đã check-in tại quầy · Số "+qno(o));s.ciStage=0}
+    }
+    lastStatus={};mine.forEach(o=>{lastStatus[o.id]=o.status});
+    if(s.screen==="checkout"){
+      if(s.payStage===0){const sl=root.querySelector("#slots");if(sl){sl.outerHTML=slotsHtml();const b=root.querySelector('[data-a="reserve"]');if(b&&!s.slot){b.disabled=true}}}
+      return;
+    }
+    if(s.screen==="track"&&s.ciStage>0)return;
+    render();
+  }
+  function remember(id){my=[id].concat(my.filter(x=>x!==id)).slice(0,20);lsSet("foodq-my-v2",my)}
+  function readName(){const nm=root.querySelector("#cus-name");s.name=(nm&&nm.value.trim())||"";lsSet("foodq-name",s.name)}
+  root.addEventListener("click",async ev=>{
+    const b=ev.target.closest("[data-a]");if(!b||b.disabled)return;ensureAudio();
+    const a=b.dataset.a,id=b.dataset.id;
+    if(a==="inc"){s.cart[id]=(s.cart[id]||0)+1;render()}
+    else if(a==="dec"){s.cart[id]=Math.max(0,(s.cart[id]||0)-1);render()}
+    else if(a==="checkout"){if(!count())return;const out=items().filter(i=>App.data.soldOut.includes(i.id));if(out.length){out.forEach(i=>delete s.cart[i.id]);toast("Có món vừa hết, đã bỏ khỏi giỏ");render();return}s.screen="checkout";s.payStage=0;render()}
+    else if(a==="mode"){readName();s.mode=id;render()}
+    else if(a==="slot"){s.slot=id;root.querySelectorAll(".slot").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===id)));const r=root.querySelector('[data-a="reserve"]');if(r){r.disabled=false;r.firstElementChild.textContent="Giữ chỗ lúc "+id}}
+    else if(a==="pay"){readName();s.payCode="FOODQ "+Math.random().toString(36).slice(2,7).toUpperCase();s.payStage=1;render()}
+    else if(a==="paid"){
+      s.payStage=2;render();
+      const t=now();
+      const order={kind:"now",name:s.name||"Khách",items:items(),total:total(),status:"paid",createdAt:t,paidAt:t,priorityAt:t};
+      try{await sleep(1000);const c=await act(()=>App.store.createOrder(order));remember(c.id);lastStatus[c.id]="paid";
+        s.cart={};s.screen="track";s.trackId=c.id;s.payStage=0;toast("Đặt món thành công · Số "+qno(c));render()}
+      catch(e){s.payStage=1;render()}
+    }
+    else if(a==="reserve"){
+      readName();const t=now();const st=slotState(s.slot,App.data,t);
+      if(st.closed||st.full){toast(st.full?"Khung giờ vừa đầy, chọn khung khác":"Đã quá hạn đặt trước cho khung này");s.slot=null;render();return}
+      s.payStage=2;render();
+      const order={kind:"reserve",name:s.name||"Khách",items:items(),total:total(),status:"reserved",slot:st.hhmm,slotAt:st.at,createdAt:t};
+      try{await sleep(700);const c=await act(()=>App.store.createOrder(order));remember(c.id);lastStatus[c.id]="reserved";
+        s.cart={};s.screen="track";s.trackId=c.id;s.payStage=0;s.ciStage=0;toast("Đã giữ chỗ lúc "+st.hhmm+" · Mã "+code(c));render()}
+      catch(e){s.payStage=0;render()}
+    }
+    else if(a==="ci-start"){s.ciStage=1;render()}
+    else if(a==="ci-paid"){
+      const o=App.data.orders.find(x=>x.id===s.trackId);
+      if(!o||o.status!=="reserved"||phase(o,now())!=="open"){s.ciStage=0;toast("Không còn trong giờ check-in");render();return}
+      s.ciStage=2;render();
+      const t=now();
+      try{await sleep(900);const c=await act(()=>App.store.checkin(o.id,{status:"paid",checkinAt:t,paidAt:t,priorityAt:o.slotAt}));lastStatus[o.id]="paid";
+        s.ciStage=0;toast("Check-in xong · Số thứ tự "+qno(c));render()}
+      catch(e){s.ciStage=1;render()}
+    }
+    else if(a==="track"){s.screen="track";s.trackId=id;s.ciStage=0;render()}
+    else if(a==="lookup"){lookup()}
+    else if(a==="back"){s.screen="menu";s.payStage=0;s.ciStage=0;render()}
+  });
+  root.addEventListener("input",ev=>{if(ev.target.id==="cus-name")s.name=ev.target.value});
+  root.addEventListener("keydown",ev=>{if(ev.target.id==="lookup-code"&&ev.key==="Enter"){ev.preventDefault();lookup()}});
+  function lookup(){
+    const li=root.querySelector("#lookup-code");const v=(li&&li.value||"").trim().toUpperCase().replace(/\s+/g,"");
+    if(!v){toast("Nhập số thứ tự hoặc mã đơn");return}
+    const hits=App.data.orders.filter(o=>code(o).toUpperCase()===v||(o.number&&(qno(o).toUpperCase()===v||String(o.number)===v)));
+    const o=hits.find(isLive)||hits[0];
+    if(!o){toast("Không tìm thấy đơn "+v);return}
+    remember(o.id);lastStatus[o.id]=o.status;s.screen="track";s.trackId=o.id;s.ciStage=0;render();
+  }
+  myOrders().forEach(o=>{lastStatus[o.id]=o.status});
+  render();
+  return{onData,tick};
+}
+
+/* ---------- kitchen app ---------- */
+function KitchenView(root){
+  let armed=false,armT=null,sig="",genN="5",genType="now",busy=false;
+  const NAMES=["An","Bình","Chi","Dũng","Hà","Khoa","Linh","Minh","Nam","Phương","Quân","Thảo","Trang","Tuấn","Vy","Yến"];
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function randItems(){
+    const ok=MENU.filter(m=>!App.data.soldOut.includes(m.id));
+    const mains=ok.filter(m=>m.price>=30000),drinks=ok.filter(m=>m.price<30000);
+    const out=[];
+    if(mains.length){const m=pick(mains);out.push({id:m.id,name:m.name,price:m.price,qty:Math.random()<.2?2:1})}
+    if(drinks.length&&(Math.random()<.5||!out.length)){const m=pick(drinks);out.push({id:m.id,name:m.name,price:m.price,qty:1})}
+    return out;
+  }
+  async function generate(){
+    if(busy)return;
+    let count=Math.max(1,Math.min(20,parseInt(genN,10)||0));
+    if(!randItems().length){toast("Tất cả món đang báo hết");return}
+    if(genType!=="now"){const st=slotState(genType,App.data,now());
+      if(st.left<=0){toast("Khung "+genType+" đã đủ "+RULE.cap+" chỗ");return}
+      if(count>st.left){count=st.left;toast("Khung "+genType+" chỉ còn "+st.left+" chỗ, tạo "+st.left+" đơn")}}
+    busy=true;render();
+    let made=0;
+    try{
+      for(let i=0;i<count;i++){
+        const its=randItems(),tot=its.reduce((a,x)=>a+x.price*x.qty,0),t=now(),nm=pick(NAMES)+" (demo)";
+        const o=genType==="now"
+          ?{kind:"now",name:nm,items:its,total:tot,status:"paid",createdAt:t,paidAt:t,priorityAt:t,demo:true}
+          :{kind:"reserve",name:nm,items:its,total:tot,status:"reserved",slot:genType,slotAt:atToday(genType,t),createdAt:t,demo:true};
+        await act(()=>App.store.createOrder(o));made++;
+      }
+      toast("Đã tạo "+made+" đơn demo "+(genType==="now"?"lấy ngay":"đặt trước "+genType));
+    }catch(e){}
+    busy=false;render();
+  }
+  const phaseSig=t=>App.data.orders.filter(o=>o.status==="reserved").map(o=>o.id+phase(o,t)).join("|");
+  function itemsHtml(o){return '<ul>'+(o.items||[]).map(i=>'<li><em class="num">'+i.qty+'×</em><span>'+esc(i.name)+'</span></li>').join("")+'</ul>'}
+  function resTicket(o,t){
+    const ph=phase(o,t);
+    let line,btn;
+    if(ph==="early"){line='<span class="phase">Check-in từ '+hm(winOpen(o))+' · còn <span data-until="'+winOpen(o)+'">'+mmss((winOpen(o)-t)/1000)+'</span></span>';btn='<button class="act ghost" disabled>Chưa đến giờ check-in</button>'}
+    else if(ph==="open"){line='<span class="phase open">Đang mở check-in · đóng sau <span data-until="'+winClose(o)+'">'+mmss((winClose(o)-t)/1000)+'</span></span>';btn='<button class="act" data-a="checkin" data-id="'+esc(o.id)+'">Check-in · Thu '+fmt(o.total)+'</button>'}
+    else{line='<span class="phase gone">Quá giờ, khách chưa đến (đóng '+hm(winClose(o))+')</span>';btn='<button class="act ghost" data-a="noshow" data-id="'+esc(o.id)+'">Hủy chỗ</button>'}
+    return '<div class="tk '+(ph==="open"?"open":ph==="gone"?"gone":"")+'"><div class="tk-h"><b>'+o.slot+'</b><span class="who">'+esc(o.name||"Khách")+'<br>'+code(o)+'</span></div>'+itemsHtml(o)+
+      '<div class="tk-meta">'+line+'<span class="num">'+fmt(o.total)+'</span></div>'+btn+'</div>';
+  }
+  function ticket(o,t,avg){
+    const since=o.status==="cooking"?o.cookingAt:o.status==="ready"?o.readyAt:(o.paidAt||o.createdAt);
+    const late=o.status==="cooking"&&(t-o.cookingAt)/1000>avg*1.5;
+    const verb=o.status==="paid"?"Chờ":o.status==="cooking"?"Đang làm":"Chờ nhận";
+    const btn=o.status==="paid"?"Bắt đầu làm":o.status==="cooking"?"Xong · Gọi số "+qno(o):"Đã giao";
+    const next=o.status==="paid"?"cooking":o.status==="cooking"?"ready":"done";
+    const tag=o.kind==="reserve"?'<span class="tag-r">Ưu tiên · đặt trước '+o.slot+'</span>':'<span class="pill">Lấy ngay</span>';
+    return '<div class="tk'+(late?" late":"")+'"><div class="tk-h"><b class="num">'+qno(o)+'</b><span class="who">'+esc(o.name||"Khách")+'</span></div>'+itemsHtml(o)+
+      '<div class="tk-meta">'+tag+'<span class="num">'+verb+' <span data-since="'+since+'">'+mmss((t-since)/1000)+'</span></span></div>'+
+      '<button class="act" data-a="move" data-id="'+esc(o.id)+'" data-to="'+next+'">'+btn+'</button></div>';
+  }
+  function col(cls,title,body,count,extra){
+    return '<section class="col '+cls+'"><h3>'+title+'<span class="num">'+count+'</span></h3>'+(extra||"")+body+'</section>';
+  }
+  function render(){
+    const ae=document.activeElement,keepId=ae&&(ae.id==="k-clock"||ae.id==="k-gen-n")?ae.id:null,keepVal=keepId?ae.value:null;
+    const d=App.data,t=now(),avg=avgPrep(d.orders);sig=phaseSig(t);
+    const by=st=>d.orders.filter(o=>o.status===st);
+    const resv=by("reserved").sort((a,b)=>a.slotAt-b.slotAt||a.createdAt-b.createdAt);
+    const paid=by("paid").sort(byQueue),cooking=by("cooking").sort((a,b)=>a.cookingAt-b.cookingAt),ready=by("ready").sort((a,b)=>a.readyAt-b.readyAt),done=by("done");
+    const c=calling(d);
+    let h='<div class="stats">'+
+      '<div class="stat"><div class="k">Đặt trước chờ check-in</div><div class="v num">'+resv.filter(o=>phase(o,t)!=="gone").length+'</div></div>'+
+      '<div class="stat"><div class="k">Chờ làm</div><div class="v num">'+paid.length+'</div></div>'+
+      '<div class="stat"><div class="k">Đang làm</div><div class="v num">'+cooking.length+'</div></div>'+
+      '<div class="stat"><div class="k">Thời gian TB/đơn</div><div class="v num">'+mmss(avg)+'</div></div>'+
+      '<div class="stat call"><div class="k">Đang gọi số</div><div class="v num">'+(c?qno(c):"–")+'</div></div></div>';
+    h+='<div class="controls"><div class="grp clock"><span class="k">Giờ</span><b class="num" data-clock>'+hm(t)+'</b>'+(d.clockOffset?'<span class="demo">giờ demo</span>':"")+
+      '<label class="k" for="k-clock">Đặt giờ hệ thống</label><input type="time" id="k-clock" class="timein" value="'+hm(t)+'"><button class="toggle" data-a="clockset">Đặt giờ</button><button class="toggle" data-a="clockadd" data-d="5">+5 phút</button>'+(d.clockOffset?'<button class="toggle" data-a="clockreal">Giờ thật</button>':"")+'</div>'+
+      '<div class="grp"><span class="k">Người nấu</span><button class="stepbtn" data-a="cooks" data-d="-1" aria-label="Bớt người nấu">−</button><b class="num">'+(d.cooks||2)+'</b><button class="stepbtn" data-a="cooks" data-d="1" aria-label="Thêm người nấu">+</button></div>'+
+      '<div class="grp"><span class="k">Báo hết món</span>'+MENU.map(m=>'<button class="toggle" data-a="sold" data-id="'+m.id+'" aria-pressed="'+d.soldOut.includes(m.id)+'">'+m.name+'</button>').join("")+'</div>'+
+      '<button class="danger'+(armed?" arm":"")+'" data-a="reset">'+(armed?"Bấm lần nữa để xóa":"Xóa dữ liệu demo")+'</button></div>';
+    h+='<div class="controls"><div class="grp"><span class="k">Tạo đơn demo để test</span>'+
+      '<label class="k" for="k-gen-n">Số đơn</label><input type="number" id="k-gen-n" class="timein num" min="1" max="20" value="'+esc(genN)+'" style="width:64px">'+
+      '<label class="k" for="k-gen-type">Loại</label><select id="k-gen-type" class="timein">'+
+      '<option value="now"'+(genType==="now"?" selected":"")+'>Lấy ngay (đã thanh toán)</option>'+
+      RULE.slots.map(x=>{const st=slotState(x,d,t);return '<option value="'+x+'"'+(genType===x?" selected":"")+'>Đặt trước '+x+' (còn '+Math.max(0,st.left)+'/'+RULE.cap+')</option>'}).join("")+
+      '</select><button class="toggle" data-a="gen"'+(busy?" disabled":"")+'>'+(busy?"Đang tạo…":"Tạo đơn")+'</button></div></div>';
+    if(!d.ready)h+='<div class="notice">Đang tải đơn hàng…</div>';
+    const slotbar='<div class="slotbar">'+RULE.slots.map(x=>{const st=slotState(x,d,t);return '<span class="num">'+x+' · '+st.used+'/'+RULE.cap+'</span>'}).join("")+'</div>';
+    h+='<div class="cols">'+
+      col("reserve","Đặt trước (chưa check-in)",resv.length?resv.map(o=>resTicket(o,t)).join(""):'<div class="empty">Chưa có chỗ đặt trước cho 11:00–12:00.</div>',resv.length,slotbar)+
+      col("new","Hàng chờ làm",paid.length?paid.map(o=>ticket(o,t,avg)).join(""):'<div class="empty">Đơn đã thanh toán sẽ vào đây, xếp theo giờ ưu tiên.</div>',paid.length)+
+      col("cooking","Đang làm",cooking.length?cooking.map(o=>ticket(o,t,avg)).join(""):'<div class="empty">Bấm “Bắt đầu làm” ở hàng chờ.</div>',cooking.length)+
+      col("ready","Chờ sinh viên nhận",ready.length?ready.map(o=>ticket(o,t,avg)).join(""):'<div class="empty">Món xong sẽ hiện ở đây và báo cho sinh viên.</div>',ready.length)+'</div>';
+    h+='<div class="donecount num">Đã giao: '+done.length+' · Không đến: '+by("noshow").length+' · Tốc độ bếp tính từ 8 đơn gần nhất</div>';
+    root.innerHTML='<div class="k-wrap">'+h+'</div>';
+    if(keepId){const ci=root.querySelector("#"+keepId);if(ci){ci.value=keepVal;ci.focus()}}
+  }
+  function tick(){
+    const t=now();
+    if(phaseSig(t)!==sig){render();return}
+    root.querySelectorAll("[data-since]").forEach(el=>{el.textContent=mmss((t-Number(el.dataset.since))/1000)});
+    root.querySelectorAll("[data-until]").forEach(el=>{el.textContent=mmss((Number(el.dataset.until)-t)/1000)});
+    root.querySelectorAll("[data-clock]").forEach(el=>{el.textContent=hm(t)});
+  }
+  root.addEventListener("click",async ev=>{
+    const b=ev.target.closest("[data-a]");if(!b||b.disabled)return;const a=b.dataset.a;const t=now();
+    if(a==="move"){
+      const id=b.dataset.id,to=b.dataset.to,p={status:to};
+      if(to==="cooking")p.cookingAt=t;if(to==="ready")p.readyAt=t;if(to==="done")p.doneAt=t;
+      b.disabled=true;try{await act(()=>App.store.updateOrder(id,p))}catch(e){b.disabled=false}
+    }
+    else if(a==="checkin"){
+      const o=App.data.orders.find(x=>x.id===b.dataset.id);if(!o||phase(o,t)!=="open"){toast("Không còn trong giờ check-in");render();return}
+      b.disabled=true;try{const c=await act(()=>App.store.checkin(o.id,{status:"paid",checkinAt:t,paidAt:t,priorityAt:o.slotAt,paidAtCounter:true}));toast("Đã check-in "+code(o)+" · Số "+qno(c))}catch(e){b.disabled=false}
+    }
+    else if(a==="noshow"){b.disabled=true;try{await act(()=>App.store.updateOrder(b.dataset.id,{status:"noshow",noshowAt:t}))}catch(e){b.disabled=false}}
+    else if(a==="clockset"){setClock()}
+    else if(a==="gen"){generate()}
+    else if(a==="clockadd"){await act(()=>App.store.setConfig({clockOffset:now()-Date.now()+Number(b.dataset.d)*MIN}))}
+    else if(a==="clockreal"){await act(()=>App.store.setConfig({clockOffset:0}))}
+    else if(a==="cooks"){const n=Math.min(6,Math.max(1,(App.data.cooks||2)+Number(b.dataset.d)));if(n!==(App.data.cooks||2))await act(()=>App.store.setConfig({cooks:n}))}
+    else if(a==="sold"){const set=new Set(App.data.soldOut);set.has(b.dataset.id)?set.delete(b.dataset.id):set.add(b.dataset.id);await act(()=>App.store.setConfig({soldOut:[...set]}))}
+    else if(a==="reset"){
+      if(!armed){armed=true;render();clearTimeout(armT);armT=setTimeout(()=>{armed=false;render()},3500);return}
+      armed=false;clearTimeout(armT);b.disabled=true;b.textContent="Đang xóa…";
+      try{await act(()=>App.store.reset());toast("Đã xóa dữ liệu demo")}catch(e){}render();
+    }
+  });
+  async function setClock(){const ci=root.querySelector("#k-clock");const v=ci&&ci.value;if(!v){toast("Nhập giờ trước khi bấm Đặt giờ");return}if(ci)ci.blur();await act(()=>App.store.setConfig({clockOffset:atToday(v,Date.now())-Date.now()}));toast("Đã đặt giờ hệ thống: "+v)}
+  root.addEventListener("keydown",ev=>{if(ev.target.id==="k-clock"&&ev.key==="Enter"){ev.preventDefault();setClock()}if(ev.target.id==="k-gen-n"&&ev.key==="Enter"){ev.preventDefault();genN=ev.target.value;generate()}});
+  root.addEventListener("input",ev=>{if(ev.target.id==="k-gen-n")genN=ev.target.value});
+  root.addEventListener("change",ev=>{if(ev.target.id==="k-gen-type")genType=ev.target.value});
+  render();
+  return{onData:render,tick};
+}
+
+/* ---------- home ---------- */
+function homeHtml(){
+  return '<div class="home"><div><h1>Bản demo FoodQ</h1><p class="lead">Đặt món trước, thanh toán và theo dõi số thứ tự cho căn tin gần trường. Hai ứng dụng dùng chung một hàng chờ: sinh viên đặt món hoặc giữ chỗ giờ cao điểm, bếp nhận đơn và báo khi món xong.</p></div>'+
+  '<div class="picks">'+
+  '<a class="pick" href="#client"><span class="eyebrow">Điện thoại sinh viên</span><h2>App Sinh viên</h2><span>Lấy ngay hoặc giữ chỗ khung 11:00–12:00, check-in và thanh toán tại quầy, theo dõi số thứ tự và thời gian dự kiến.</span></a>'+
+  '<a class="pick" href="#kitchen"><span class="eyebrow">Máy tính bảng ở quầy và bếp</span><h2>App Bếp</h2><span>Hàng đặt trước riêng, check-in khách, hàng chờ làm xếp theo giờ ưu tiên, báo xong để gọi số.</span></a>'+
+  '<a class="pick" href="#both"><span class="eyebrow">Thuyết trình trên một màn hình</span><h2>Xem song song</h2><span>Hai app đặt cạnh nhau, thao tác bên này thấy ngay bên kia.</span></a></div>'+
+  '<div class="steps"><h3>Quy tắc đặt trước giờ cao điểm</h3><ol>'+
+  '<li>Giờ cao điểm 11:00–12:00, chia khung 15 phút, mỗi khung tối đa '+RULE.cap+' chỗ.</li>'+
+  '<li>Phải đặt trước ít nhất '+RULE.leadMin+' phút (khung 11:00 đóng lúc 10:00). Giữ chỗ chưa cần thanh toán.</li>'+
+  '<li>Đến quầy check-in và thanh toán từ '+RULE.beforeMin+' phút trước đến '+RULE.afterMin+' phút sau giờ đã chọn. Quá giờ thì chỗ bị hủy.</li>'+
+  '<li>Check-in và thanh toán xong, đơn đặt trước được đưa lên đầu hàng chờ làm, trước tất cả đơn lấy ngay. Đây là điểm khác với đặt trực tiếp: đơn lấy ngay xếp theo thứ tự thanh toán. Nếu có nhiều đơn đặt trước cùng chờ, khung giờ sớm hơn làm trước.</li></ol>'+
+  '<p class="muted">Để demo, App Bếp có ô “Đặt giờ hệ thống”: ví dụ đặt 10:00 rồi giữ chỗ, sau đó đặt 10:55 hoặc bấm +5 phút để tới giờ check-in. Giờ đã đặt vẫn chạy tiếp và dùng chung cho mọi màn hình; bấm “Giờ thật” để quay về giờ hiện tại.</p></div></div>';
+}
+
+/* ---------- routing ---------- */
+const main=document.getElementById("main");
+function route(){
+  const r=(location.hash||"").replace("#","");
+  App.views.clear();
+  document.querySelectorAll(".nav a").forEach(a=>{if(a.dataset.r===r)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  const note=App.notice?'<div class="notice">'+esc(App.notice)+'</div>':"";
+  if(r==="client"){main.innerHTML=note+'<div class="solo-client"><div class="phone" id="cv"></div></div>';App.views.add(ClientView(document.getElementById("cv")))}
+  else if(r==="kitchen"){main.innerHTML=note+'<div class="solo-kitchen" id="kv"></div>';App.views.add(KitchenView(document.getElementById("kv")))}
+  else if(r==="both"){main.innerHTML=note+'<div class="both"><div><p class="lbl">App Sinh viên</p><div class="phone" id="cv"></div></div><div style="min-width:0"><p class="lbl">App Bếp</p><div id="kv"></div></div></div>';
+    App.views.add(ClientView(document.getElementById("cv")));App.views.add(KitchenView(document.getElementById("kv")))}
+  else{main.innerHTML=note+homeHtml()}
+}
+window.addEventListener("hashchange",route);
+setInterval(()=>App.views.forEach(v=>v.tick&&v.tick()),1000);
+
+useStore(localStore());
+route();
+try{
+  if(window.claude&&typeof window.claude.use==="function"){
+    window.claude.use("db").then(db=>{if(db){useStore(dbStore(db));App.views.forEach(v=>v.onData())}}).catch(()=>{});
+  }
+}catch(e){}
+})();
+</script>
