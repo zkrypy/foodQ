@@ -6,8 +6,8 @@ title = re.search(r'<title>(.*?)</title>', src).group(1)
 helmet = re.search(r'<helmet>(.*?)</helmet>', src, re.S).group(1)
 body = re.search(r'</helmet>(.*?)</x-dc>', src, re.S).group(1)
 for blob, local in [('/_blob/fe704cd5d4e781daad88495d835da011', 'qr.png'),
-                    ('/_blob/15ac03b310129e87e16d38caccba157c', 'demo.mp4'),
-                    ('/_blob/d28dad1e570639070c106f69dff3cf96', 'poster.jpg')]:
+                    ('/_blob/543ad5a368d9e71f5e9ebd9f443a967b', 'demo.mp4'),
+                    ('/_blob/ef68f50cb913e510ded9461f16e6dcac', 'poster.jpg')]:
     body = body.replace(blob, local)
 assert '/_blob/' not in body
 body = body.replace('href="https://zkrypy.github.io/foodQ/#client"', 'href="../"')
