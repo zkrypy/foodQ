@@ -109,6 +109,28 @@ body.client-only #main{padding-top:16px}
 .cta[disabled]{opacity:.45;cursor:not-allowed}
 .cta.ghost{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);justify-content:center}
 .back{border:0;background:none;color:var(--accent-ink);font-weight:600;padding:0;margin-bottom:6px;font-size:13.5px}
+.intro-hero{background:var(--accent);color:var(--accent-ink);padding:22px 18px 20px}
+.intro-hero .logo{width:56px;height:56px;border-radius:16px;background:var(--accent-ink);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:20px;margin-bottom:12px}
+.intro-hero h1{margin:0;font-size:24px;font-weight:800;line-height:1.2}
+.intro-hero p{margin:6px 0 0;font-size:14px;opacity:.92;line-height:1.45}
+.open-pill{display:inline-flex;gap:7px;align-items:center;margin-top:12px;background:rgba(255,255,255,.2);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}
+.open-pill i{width:8px;height:8px;border-radius:50%;background:#7CE3A6}
+.open-pill.closed i{background:#FFC2A8}
+.info{padding:2px 12px}
+.info .r{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.info .r:last-child{border-bottom:0}
+.info .r span{color:var(--muted)}
+.info .r b{text-align:right;font-weight:600}
+.h-sec{font-size:15px;font-weight:800;margin:4px 2px -4px}
+.picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pick-dish{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px;display:grid;gap:4px;font-size:13px}
+.pick-dish .sw{width:100%;height:54px}
+.pick-dish .nm{font-weight:700;line-height:1.25}
+.pick-dish .pr{color:var(--muted)}
+.how{display:grid;gap:8px;font-size:14px;line-height:1.4}
+.how div{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start}
+.how b{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:13px}
+
 .sec{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px}
 .sec h3{font-size:14px;margin-bottom:8px}
 .line{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:3px 0}
@@ -466,7 +488,7 @@ function chime(){
 
 /* ---------- client app ---------- */
 function ClientView(root){
-  const s={screen:"menu",cart:{},mode:"now",slot:null,name:lsGet("foodq-name",""),payStage:0,trackId:null,payCode:"",ciStage:0,renderedPhase:null};
+  const s={screen:"intro",cart:{},mode:"now",slot:null,name:lsGet("foodq-name",""),payStage:0,trackId:null,payCode:"",ciStage:0,renderedPhase:null};
   let my=lsGet("foodq-my-v2",[]);
   let lastStatus={};
   const myOrders=()=>my.map(id=>App.data.orders.find(o=>o.id===id)).filter(Boolean).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -484,9 +506,30 @@ function ClientView(root){
     if(o.status==="reserved")return phase(o,now())==="gone"?"Quá giờ check-in":"Đã giữ chỗ "+o.slot;
     return o.status==="paid"?"Chờ bếp xử lý":o.status==="cooking"?"Đang chế biến":o.status==="ready"?"Đã xong, mời đến nhận":o.status==="noshow"?"Đã hủy chỗ":"Đã nhận món";
   }
+  function introScreen(){
+    const live=activeMine()[0];
+    const d=new Date(now()),mins=d.getHours()*60+d.getMinutes(),open=mins>=390&&mins<1080;
+    let h='<div class="intro-hero"><div class="logo">CT</div><h1>Căn tin cổng trường</h1>'+
+      '<p>Cơm, bún, mì nấu trong ngày cho sinh viên. Đặt trước trên điện thoại, đến quầy là có món.</p>'+
+      '<span class="open-pill'+(open?"":" closed")+'"><i></i>'+(open?"Đang mở cửa · 6:30 – 18:00":"Đang đóng cửa · mở lại lúc 6:30")+'</span></div><div class="c-body">';
+    if(live){h+='<button class="active-order'+(live.status==="ready"?" ready":"")+'" data-a="track" data-id="'+esc(live.id)+'"><span>'+(live.number?'Đơn số <strong class="num">'+qno(live)+'</strong>':'Mã <strong>'+code(live)+'</strong>')+' · '+statusText(live)+'</span><span>Xem ›</span></button>'}
+    h+='<div class="sec info">'+
+      '<div class="r"><span>Vị trí</span><b>Cạnh cổng chính</b></div>'+
+      '<div class="r"><span>Nhận món</span><b>Quầy FoodQ trong căn tin</b></div>'+
+      '<div class="r"><span>Thanh toán</span><b>VietQR, tiền vào thẳng căn tin</b></div>'+
+      '<div class="r"><span>Giờ cao điểm</span><b>11:00 – 12:00, nên đặt trước</b></div></div>';
+    const picks=["com-ga","bun-bo","com-tam"].map(id=>MENU.find(m=>m.id===id)).filter(Boolean);
+    h+='<div class="h-sec">Món được đặt nhiều</div><div class="picks">'+picks.map(m=>'<div class="pick-dish"><div class="sw" style="background:'+m.tone+'">'+m.ab+'</div><div class="nm">'+m.name+'</div><div class="pr num">'+fmt(m.price)+'</div></div>').join("")+'</div>';
+    h+='<div class="h-sec">Đặt món ở đây thế nào?</div><div class="sec how">'+
+      '<div><b>1</b><span>Chọn món, lấy ngay hoặc giữ chỗ khung 15 phút</span></div>'+
+      '<div><b>2</b><span>Quét VietQR để thanh toán</span></div>'+
+      '<div><b>3</b><span>Theo dõi hàng chờ, app báo khi món xong</span></div></div>';
+    h+='</div><div class="bar"><button class="cta" data-a="menu"><span>Xem menu và đặt món</span><span>›</span></button></div>';
+    return h;
+  }
   function menuScreen(){
     const live=activeMine()[0];
-    let h=head('Bây giờ <b class="num" data-clock>'+hm(now())+'</b> · Nhận món tại quầy FoodQ')+'<div class="c-body">';
+    let h='<div class="c-head"><button class="back" data-a="intro">‹ Giới thiệu căn tin</button><div class="shop">Căn tin cổng trường</div><div class="sub">Bây giờ <b class="num" data-clock>'+hm(now())+'</b> · Nhận món tại quầy FoodQ</div></div><div class="c-body">';
     h+='<span class="chip-src">Mở từ mã QR trong nhóm chat lớp</span>';
     h+='<div class="lookup"><label class="k" for="lookup-code">Đã đặt ở máy khác?</label><input id="lookup-code" maxlength="12" placeholder="Nhập số hoặc mã đơn, vd P106" autocomplete="off"><button data-a="lookup">Theo dõi</button></div>';
     if(live){h+='<button class="active-order'+(live.status==="ready"?" ready":"")+'" data-a="track" data-id="'+esc(live.id)+'"><span>'+(live.number?'Đơn số <strong class="num">'+qno(live)+'</strong>':'Mã <strong>'+code(live)+'</strong>')+' · '+statusText(live)+'</span><span>Xem ›</span></button>'}
@@ -590,7 +633,7 @@ function ClientView(root){
   }
   function render(){
     const ae=document.activeElement,keep=ae&&ae.id==="lookup-code"&&root.contains(ae)?ae.value:null;
-    root.innerHTML=s.screen==="menu"?menuScreen():s.screen==="checkout"?checkoutScreen():trackScreen();
+    root.innerHTML=s.screen==="intro"?introScreen():s.screen==="menu"?menuScreen():s.screen==="checkout"?checkoutScreen():trackScreen();
     const cv=root.querySelector("#qr");if(cv)drawQR(cv,s.payCode||s.trackId||"x");
     if(keep!=null){const li=root.querySelector("#lookup-code");if(li){li.value=keep;li.focus()}}
     tick();
@@ -665,6 +708,8 @@ function ClientView(root){
     else if(a==="track"){s.screen="track";s.trackId=id;s.ciStage=0;render()}
     else if(a==="lookup"){lookup()}
     else if(a==="back"){s.screen="menu";s.payStage=0;s.ciStage=0;render()}
+    else if(a==="menu"){s.screen="menu";render();root.scrollTop=0}
+    else if(a==="intro"){s.screen="intro";render();root.scrollTop=0}
   });
   root.addEventListener("input",ev=>{if(ev.target.id==="cus-name")s.name=ev.target.value});
   root.addEventListener("keydown",ev=>{if(ev.target.id==="lookup-code"&&ev.key==="Enter"){ev.preventDefault();lookup()}});
