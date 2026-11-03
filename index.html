@@ -121,6 +121,8 @@ body.client-only #main{padding-top:16px}
 .info .r:last-child{border-bottom:0}
 .info .r span{color:var(--muted)}
 .info .r b{text-align:right;font-weight:600}
+.notice{background:var(--warn-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4}
+.seg button[disabled]{opacity:.45;cursor:not-allowed}
 .h-sec{font-size:15px;font-weight:800;margin:4px 2px -4px}
 .picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick-dish{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px;display:grid;gap:4px;font-size:13px}
@@ -196,6 +198,10 @@ body.client-only #main{padding-top:16px}
 .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
 .controls .grp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .controls .k{color:var(--muted)}
+.onoff{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13.5px;border:0;min-height:32px}
+.onoff i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.onoff.on{background:var(--ok-soft);color:var(--ok)}
+.onoff.off{background:var(--warn-soft);color:var(--warn)}
 .stepbtn{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-weight:700}
 .toggle{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
 .toggle[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);text-decoration:line-through}
@@ -328,7 +334,7 @@ function localStore(){
   let st=lsGet(KEY,null)||blank();
   const subs=new Set();let bc=null;
   try{bc=new BroadcastChannel("foodq-demo-v2")}catch(e){}
-  const snap=()=>({orders:Object.values(st.orders),soldOut:st.soldOut||[],cooks:st.cooks||2,clockOffset:st.clockOffset==null?null:st.clockOffset,ready:true,stale:false});
+  const snap=()=>({orders:Object.values(st.orders),soldOut:st.soldOut||[],cooks:st.cooks||2,closed:!!st.closed,noReserve:!!st.noReserve,clockOffset:st.clockOffset==null?null:st.clockOffset,ready:true,stale:false});
   const emit=()=>{const s=snap();subs.forEach(f=>f(s))};
   const reload=()=>{st=lsGet(KEY,null)||blank();emit()};
   const onStorage=e=>{if(e.key===KEY)reload()};
@@ -341,14 +347,14 @@ function localStore(){
     async checkin(id,p){const o=st.orders[id];if(!o)throw new Error("missing");st.last=(st.last||100)+1;Object.assign(o,p,{number:st.last});save();return Object.assign({},o)},
     async updateOrder(id,p){if(!st.orders[id])return;Object.assign(st.orders[id],p);save()},
     async setConfig(p){Object.assign(st,p);save()},
-    async reset(){const keep={cooks:st.cooks,clockOffset:st.clockOffset};st=Object.assign(blank(),keep);save()},
+    async reset(){const keep={cooks:st.cooks,clockOffset:st.clockOffset,closed:st.closed,noReserve:st.noReserve};st=Object.assign(blank(),keep);save()},
     close(){subs.clear();if(bc){bc.onmessage=null;try{bc.close()}catch(e){}}window.removeEventListener("storage",onStorage)}
   };
 }
 function dbStore(db){
   const col=db.collection("orders"),cfg=db.doc("config/settings"),ctr=db.doc("config/counter");
   let orders=[],cfgData={},ready=false,stale=false;const subs=new Set(),unsubs=[];
-  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
+  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,closed:!!cfgData.closed,noReserve:!!cfgData.noReserve,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
   const emit=()=>{const s=snap();subs.forEach(f=>f(s))};
   const timer=setTimeout(()=>{stale=true;emit()},10000);
   unsubs.push(col.limit(500).onSnapshot(s=>{
@@ -371,7 +377,7 @@ function dbStore(db){
     }
     return maxSeen()+1;
   }
-  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
+  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,closed:!!cfgData.closed,noReserve:!!cfgData.noReserve,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
   return{mode:"db",
     subscribe(f){subs.add(f);f(snap());return()=>subs.delete(f)},
     async createOrder(o){const ord=Object.assign({},o);if(ord.status!=="reserved")ord.number=await nextNumber();const ref=col.doc();await ref.set(ord);return Object.assign({},ord,{id:ref.id})},
@@ -389,7 +395,7 @@ function firebaseStore(cfg){
   const fs=firebase.firestore(app);
   const col=fs.collection("orders"),cfgRef=fs.doc("config/settings"),ctr=fs.doc("config/counter");
   let orders=[],cfgData={},ready=false,stale=false;const subs=new Set(),unsubs=[];
-  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
+  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,closed:!!cfgData.closed,noReserve:!!cfgData.noReserve,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
   const emit=()=>{const s=snap();subs.forEach(f=>f(s))};
   const timer=setTimeout(()=>{stale=true;emit()},10000);
   unsubs.push(col.onSnapshot({includeMetadataChanges:true},s=>{
@@ -399,7 +405,7 @@ function firebaseStore(cfg){
   unsubs.push(cfgRef.onSnapshot(s=>{cfgData=s.exists?Object.assign({},s.data()):{};emit()},()=>{}));
   const maxSeen=()=>orders.reduce((m,o)=>Math.max(m,Number(o.number)||0),100);
   const nextNumber=()=>fs.runTransaction(async tx=>{const s=await tx.get(ctr);const last=(s.exists&&Number(s.data().last))||100;const n=Math.max(last,maxSeen())+1;tx.set(ctr,{last:n});return n});
-  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
+  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,closed:!!cfgData.closed,noReserve:!!cfgData.noReserve,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
   return{mode:"db",
     subscribe(f){subs.add(f);f(snap());return()=>subs.delete(f)},
     async createOrder(o){const ord=Object.assign({},o);if(ord.status!=="reserved")ord.number=await nextNumber();const ref=col.doc();await ref.set(ord);return Object.assign({},ord,{id:ref.id})},
@@ -412,7 +418,7 @@ function firebaseStore(cfg){
 }
 
 /* ---------- app shell ---------- */
-const App={store:null,unsub:null,data:{orders:[],soldOut:[],cooks:2,clockOffset:null,ready:false,stale:false},views:new Set(),notice:""};
+const App={store:null,unsub:null,data:{orders:[],soldOut:[],cooks:2,closed:false,noReserve:false,clockOffset:null,ready:false,stale:false},views:new Set(),notice:""};
 function useStore(s){
   if(App.unsub)App.unsub();
   if(App.store&&App.store.close)App.store.close();
@@ -503,16 +509,19 @@ function ClientView(root){
   }
   function introScreen(){
     const live=activeMine()[0];
-    const d=new Date(now()),mins=d.getHours()*60+d.getMinutes(),open=mins>=390&&mins<1080;
+    const cl=App.data.closed,nr=App.data.noReserve,open=!cl;
+    const pill=!cl?"Đang mở cửa":nr?"Đang đóng cửa · tạm ngưng nhận đơn":"Đang đóng cửa · chỉ nhận đặt trước";
     let h='<div class="intro-hero"><div class="logo">CT</div><h1>Căn tin cổng trường</h1>'+
       '<p>Cơm, bún, mì nấu trong ngày cho sinh viên. Đặt trước trên điện thoại, đến quầy là có món.</p>'+
-      '<span class="open-pill'+(open?"":" closed")+'"><i></i>'+(open?"Đang mở cửa · 6:30 – 18:00":"Đang đóng cửa · mở lại lúc 6:30")+'</span></div><div class="c-body">';
+      '<span class="open-pill'+(open?"":" closed")+'"><i></i>'+pill+'</span></div><div class="c-body">';
     if(live){h+='<button class="active-order'+(live.status==="ready"?" ready":"")+'" data-a="track" data-id="'+esc(live.id)+'"><span>'+(live.number?'Đơn số <strong class="num">'+qno(live)+'</strong>':'Mã <strong>'+code(live)+'</strong>')+' · '+statusText(live)+'</span><span>Xem ›</span></button>'}
     h+='<div class="sec info">'+
       '<div class="r"><span>Vị trí</span><b>Cạnh cổng chính</b></div>'+
       '<div class="r"><span>Nhận món</span><b>Quầy FoodQ trong căn tin</b></div>'+
       '<div class="r"><span>Thanh toán</span><b>VietQR, tiền vào thẳng căn tin</b></div>'+
       '<div class="r"><span>Giờ cao điểm</span><b>11:00 – 12:00, nên đặt trước</b></div></div>';
+    if(cl&&!nr)h+='<div class="notice">Căn tin đang đóng cửa. Bạn vẫn đặt trước được để nhận món khi căn tin mở.</div>';
+    if(cl&&nr)h+='<div class="notice">Căn tin đang tạm ngưng nhận đơn. Bạn quay lại sau nhé.</div>';
     const picks=["com-ga","bun-bo","com-tam"].map(id=>MENU.find(m=>m.id===id)).filter(Boolean);
     h+='<div class="h-sec">Món được đặt nhiều</div><div class="picks">'+picks.map(m=>'<div class="pick-dish"><div class="sw" style="background:'+m.tone+'">'+m.ab+'</div><div class="nm">'+m.name+'</div><div class="pr num">'+fmt(m.price)+'</div></div>').join("")+'</div>';
     h+='<div class="h-sec">Đặt món ở đây thế nào?</div><div class="sec how">'+
@@ -528,6 +537,10 @@ function ClientView(root){
     h+='<span class="chip-src">Mở từ mã QR trong nhóm chat lớp</span>';
     h+='<div class="lookup"><label class="k" for="lookup-code">Đã đặt ở máy khác?</label><input id="lookup-code" maxlength="12" placeholder="Nhập số hoặc mã đơn, vd P106" autocomplete="off"><button data-a="lookup">Theo dõi</button></div>';
     if(live){h+='<button class="active-order'+(live.status==="ready"?" ready":"")+'" data-a="track" data-id="'+esc(live.id)+'"><span>'+(live.number?'Đơn số <strong class="num">'+qno(live)+'</strong>':'Mã <strong>'+code(live)+'</strong>')+' · '+statusText(live)+'</span><span>Xem ›</span></button>'}
+    const cl=App.data.closed,nr=App.data.noReserve,stop=cl&&nr;
+    if(stop)h+='<div class="notice">Căn tin đang tạm ngưng nhận đơn. Bạn xem menu trước, quay lại sau để đặt nhé.</div>';
+    else if(cl)h+='<div class="notice">Căn tin đang đóng cửa, hiện chỉ nhận đặt trước theo khung giờ.</div>';
+    else if(nr)h+='<div class="notice">Hôm nay căn tin tạm tắt đặt trước, chỉ nhận đơn lấy ngay.</div>';
     h+='<div class="menu">';
     for(const m of MENU){
       const out=App.data.soldOut.includes(m.id),q=s.cart[m.id]||0;
@@ -536,7 +549,7 @@ function ClientView(root){
         (out?'<span class="tag-out">Hết món</span>':'<div class="qty">'+(q?'<button data-a="dec" data-id="'+m.id+'" aria-label="Bớt '+m.name+'">−</button><span class="num">'+q+'</span>':"")+'<button class="add" data-a="inc" data-id="'+m.id+'" aria-label="Thêm '+m.name+'">+</button></div>')+
       '</div>';
     }
-    h+='</div></div><div class="bar"><button class="cta" data-a="checkout"'+(count()?"":" disabled")+'><span>'+(count()?count()+" món · Tiếp tục":"Chọn món để đặt")+'</span><span class="num">'+(count()?fmt(total()):"")+'</span></button></div>';
+    h+='</div></div><div class="bar"><button class="cta" data-a="checkout"'+(count()&&!stop?"":" disabled")+'><span>'+(stop?"Tạm ngưng nhận đơn":count()?count()+" món · Tiếp tục":"Chọn món để đặt")+'</span><span class="num">'+(count()?fmt(total()):"")+'</span></button></div>';
     return h;
   }
   function slotsHtml(){
@@ -552,9 +565,13 @@ function ClientView(root){
     h+='<div class="sec"><h3>Món đã chọn</h3>'+items().map(i=>'<div class="line"><span>'+i.qty+' × '+i.name+'</span><span class="num">'+fmt(i.price*i.qty)+'</span></div>').join("")+
        '<div class="line total"><span>Tổng</span><span class="num">'+fmt(total())+'</span></div></div>';
     if(s.payStage===0){
+      const okNow=!App.data.closed,okRes=!App.data.noReserve;
+      if(!okNow&&okRes)s.mode="reserve";else if(okNow&&!okRes)s.mode="now";
+      s.cfgSig=okNow+"|"+okRes;
       h+='<div class="seg" role="group" aria-label="Cách nhận món">'+
-        '<button data-a="mode" data-id="now" aria-pressed="'+(s.mode==="now")+'">Lấy ngay<small>Thanh toán bây giờ, vào hàng chờ luôn</small></button>'+
-        '<button data-a="mode" data-id="reserve" aria-pressed="'+(s.mode==="reserve")+'">Đặt trước giờ cao điểm<small>Giữ chỗ 11:00–12:00, check-in là lên đầu hàng chờ</small></button></div>';
+        '<button data-a="mode" data-id="now" aria-pressed="'+(okNow&&s.mode==="now")+'"'+(okNow?"":" disabled")+'>Lấy ngay<small>'+(okNow?"Thanh toán bây giờ, vào hàng chờ luôn":"Căn tin đang đóng cửa")+'</small></button>'+
+        '<button data-a="mode" data-id="reserve" aria-pressed="'+(okRes&&s.mode==="reserve")+'"'+(okRes?"":" disabled")+'>Đặt trước giờ cao điểm<small>'+(okRes?"Giữ chỗ 11:00–12:00, check-in là lên đầu hàng chờ":"Căn tin tạm tắt đặt trước")+'</small></button></div>';
+      if(!okNow&&!okRes){h+='<div class="notice">Căn tin đang tạm ngưng nhận đơn.</div></div><div class="bar"><button class="cta" disabled><span>Tạm ngưng nhận đơn</span></button></div>';return h}
       if(s.mode==="reserve"){
         h+='<div class="sec"><h3>Chọn khung giờ (mỗi khung '+RULE.cap+' chỗ)</h3>'+slotsHtml()+
           '<p class="rule">Đặt trước ít nhất '+RULE.leadMin+' phút. Chưa cần thanh toán. Đến quầy check-in và thanh toán trong khoảng '+RULE.beforeMin+' phút trước đến '+RULE.afterMin+' phút sau giờ đã chọn; trễ hơn thì chỗ bị hủy. Check-in và thanh toán xong, đơn của bạn được đưa lên đầu hàng chờ, trước các đơn lấy ngay.</p></div>';
@@ -656,6 +673,7 @@ function ClientView(root){
     }
     lastStatus={};mine.forEach(o=>{lastStatus[o.id]=o.status});
     if(s.screen==="checkout"){
+      if(s.payStage===0&&s.cfgSig!==((!App.data.closed)+"|"+(!App.data.noReserve))){render();return}
       if(s.payStage===0){const sl=root.querySelector("#slots");if(sl){sl.outerHTML=slotsHtml();const b=root.querySelector('[data-a="reserve"]');if(b&&!s.slot){b.disabled=true}}}
       return;
     }
@@ -672,6 +690,8 @@ function ClientView(root){
     else if(a==="checkout"){if(!count())return;const out=items().filter(i=>App.data.soldOut.includes(i.id));if(out.length){out.forEach(i=>delete s.cart[i.id]);toast("Có món vừa hết, đã bỏ khỏi giỏ");render();return}s.screen="checkout";s.payStage=0;render()}
     else if(a==="mode"){readName();s.mode=id;render()}
     else if(a==="slot"){s.slot=id;root.querySelectorAll(".slot").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===id)));const r=root.querySelector('[data-a="reserve"]');if(r){r.disabled=false;r.firstElementChild.textContent="Giữ chỗ lúc "+id}}
+    else if(a==="pay"&&App.data.closed){toast("Căn tin vừa đóng cửa, chỉ nhận đặt trước");render()}
+    else if(a==="reserve"&&App.data.noReserve){toast("Căn tin vừa tắt đặt trước");render()}
     else if(a==="pay"){readName();s.payCode="FOODQ "+Math.random().toString(36).slice(2,7).toUpperCase();s.payStage=1;render()}
     else if(a==="paid"){
       s.payStage=2;render();

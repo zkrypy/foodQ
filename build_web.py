@@ -17,7 +17,7 @@ function firebaseStore(cfg){
   const fs=firebase.firestore(app);
   const col=fs.collection("orders"),cfgRef=fs.doc("config/settings"),ctr=fs.doc("config/counter");
   let orders=[],cfgData={},ready=false,stale=false;const subs=new Set(),unsubs=[];
-  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
+  const snap=()=>({orders,soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,closed:!!cfgData.closed,noReserve:!!cfgData.noReserve,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset,ready,stale});
   const emit=()=>{const s=snap();subs.forEach(f=>f(s))};
   const timer=setTimeout(()=>{stale=true;emit()},10000);
   unsubs.push(col.onSnapshot({includeMetadataChanges:true},s=>{
@@ -27,7 +27,7 @@ function firebaseStore(cfg){
   unsubs.push(cfgRef.onSnapshot(s=>{cfgData=s.exists?Object.assign({},s.data()):{};emit()},()=>{}));
   const maxSeen=()=>orders.reduce((m,o)=>Math.max(m,Number(o.number)||0),100);
   const nextNumber=()=>fs.runTransaction(async tx=>{const s=await tx.get(ctr);const last=(s.exists&&Number(s.data().last))||100;const n=Math.max(last,maxSeen())+1;tx.set(ctr,{last:n});return n});
-  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
+  const cfgBase=()=>({soldOut:cfgData.soldOut||[],cooks:cfgData.cooks||2,closed:!!cfgData.closed,noReserve:!!cfgData.noReserve,clockOffset:cfgData.clockOffset==null?null:cfgData.clockOffset});
   return{mode:"db",
     subscribe(f){subs.add(f);f(snap());return()=>subs.delete(f)},
     async createOrder(o){const ord=Object.assign({},o);if(ord.status!=="reserved")ord.number=await nextNumber();const ref=col.doc();await ref.set(ord);return Object.assign({},ord,{id:ref.id})},
